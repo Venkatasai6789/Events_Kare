@@ -7,6 +7,20 @@ export const CREDIT_GROUPS: CreditGroup[] = [
   { id: 'ee', name: 'EE Credits (Points)', earned: 6, total: 8, color: '#F59E0B' },
 ];
 
+export const STUDENT_PROFILE = {
+  name: "Alex Thompson",
+  registerNumber: "2023CS101",
+  department: "CSE (AI & ML)",
+  academicYear: "3rd Year",
+  batch: "2021-2025"
+};
+
+export const HOD_PROFILE = {
+  name: "Dr. Richard Branson",
+  department: "Computer Science & Engineering",
+  employeeId: "HOD-CSE-2024-001"
+};
+
 export const UPCOMING_EVENTS: Event[] = [
   {
     id: '1',
