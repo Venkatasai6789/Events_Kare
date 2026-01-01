@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Environment Variables
+.env
+.env.local
+
+# Node
+node_modules/
+npm-debug.log
+dist/
+build/
+
+# Scraped Data (Generated)
+backend/knowafest_complete_data.json
+frontend/data/external_events.json
+frontend/src/data/external_events.json
+
+# Logs
+*.log
+backend/scheduler.log
+
+# OS
+.DS_Store
+Thumbs.db

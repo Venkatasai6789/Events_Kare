@@ -1,0 +1,7 @@
+{
+  "name": "FInal events",
+  "description": "A comprehensive events and credit tracking platform for university students, featuring progress visualization and upcoming event discovery.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
