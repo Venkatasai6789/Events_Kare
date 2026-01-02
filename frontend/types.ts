@@ -56,6 +56,8 @@ export interface Event {
   endTime: string;
   location: string;
   category: 'Workshop' | 'Hackathon' | 'Cultural' | 'Sports' | 'Networking' | 'Seminar' | 'Internship' | 'Conference' | 'Short Term Course' | 'Faculty Development Program' | 'Leadership Fest' | 'Technical Event' | 'National Conference' | 'International Conference' | 'Chess Tournament' | 'Online Training Program' | 'Other';
+  eventType?: 'Technical' | 'Non-Technical';
+  eventCategory?: 'Internal' | 'External';
   creditType?: 'Group 2' | 'Group 3' | 'EE' | 'None';
   image: string;
   organizer: string;
@@ -128,6 +130,19 @@ export interface OpenRole {
   title: string;
   skills: string[];
   openings: number;
+}
+
+export interface Vacancy {
+  vacancy_id: string;
+  club_name: string;
+  title: string;
+  description: string;
+  skills: string[];
+  openings: number;
+  deadline?: string | null;
+  contact?: string | null;
+  status: 'Published' | 'Draft';
+  created_at: string;
 }
 
 export interface Club {

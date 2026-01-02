@@ -28,32 +28,53 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
         const data = await res.json();
         if (!res.ok) return;
 
-        const mapped: Event[] = (data?.events || []).map((e: any) => ({
-          id:
-            e.event_id ||
-            `${e.club_name || "club"}-${e.event_name || "event"}-${
-              e.date || ""
-            }-${e.time_from || ""}`,
-          title: e.event_name || "Untitled Event",
-          subtitle: "",
-          startDate: e.date || "",
-          endDate: e.date || "",
-          startTime: e.time_from || "",
-          endTime: e.time_to || "",
-          location: e.location || "",
-          organizer: e.club_name || "Unknown Club",
-          description: e.description || "",
-          registrationFees: "Free",
-          registrationUrl: "#",
-          registered: 0,
-          maxCapacity: 50,
-          status: "Upcoming",
-          type: e.category,
-          category: (e.event_type === "Technical"
-            ? "Technical Event"
-            : "Cultural") as any,
-          image: "",
-        }));
+        const mapped: Event[] = (data?.events || []).map((e: any) => {
+          const startDate = e.start_date || e.date || "";
+          const endDate = e.end_date || e.date || startDate || "";
+          const eventType =
+            e.event_type === "Technical"
+              ? "Technical"
+              : e.event_type === "Non-Technical"
+              ? "Non-Technical"
+              : undefined;
+          const eventCategory =
+            e.category === "Internal"
+              ? "Internal"
+              : e.category === "External"
+              ? "External"
+              : undefined;
+
+          return {
+            id:
+              e.event_id ||
+              `${e.club_name || "club"}-${e.event_name || "event"}-${
+                e.date || ""
+              }-${e.time_from || ""}`,
+            title: e.event_name || "Untitled Event",
+            subtitle: "",
+            startDate,
+            endDate,
+            startTime: e.time_from || "",
+            endTime: e.time_to || "",
+            location: e.location || "",
+            venueAddress: e.location || "",
+            organizer: e.club_name || "Unknown Club",
+            description: e.description || "",
+            contactInfo: e.contact_details || "",
+            registrationFees: "Free",
+            registrationUrl: "#",
+            registered: 0,
+            maxCapacity: 50,
+            status: "Upcoming",
+            type: eventCategory,
+            eventCategory,
+            eventType,
+            category: (eventType === "Technical"
+              ? "Technical Event"
+              : "Cultural") as any,
+            image: "",
+          };
+        });
 
         if (!cancelled) setServerEvents(mapped);
       } catch {
