@@ -31,6 +31,16 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
       })
     : "Date TBA";
 
+  const venueText = (event.venueAddress || event.location || "").trim();
+  const eventTypeLabel =
+    event.eventType ||
+    (event.category === "Technical Event"
+      ? "Technical"
+      : event.category
+      ? "Non-Technical"
+      : "");
+  const eventCategoryLabel = event.eventCategory || event.type || "";
+
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isTagsExpanded, setIsTagsExpanded] = React.useState(false);
 
@@ -252,8 +262,30 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
               </p>
             </div>
 
+            {/* Event Type & Category */}
+            {(eventTypeLabel || eventCategoryLabel) && (
+              <div>
+                <div className="flex items-center gap-3 mb-3 text-slate-900">
+                  <Info className="w-5 h-5 text-blue-600" />
+                  <span className="font-black text-sm">Event Info</span>
+                </div>
+                <div className="pl-8 space-y-1">
+                  {eventTypeLabel && (
+                    <p className="text-slate-600 text-sm font-medium leading-snug break-words">
+                      Type: {eventTypeLabel}
+                    </p>
+                  )}
+                  {eventCategoryLabel && (
+                    <p className="text-slate-600 text-sm font-medium leading-snug break-words">
+                      Category: {eventCategoryLabel}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Venue */}
-            {event.venueAddress && event.venueAddress !== "N/A" && (
+            {venueText && venueText !== "N/A" && (
               <div>
                 <div className="flex items-center gap-3 mb-3 text-slate-900">
                   <MapPin className="w-5 h-5 text-rose-600" />
@@ -261,7 +293,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
                 </div>
                 <div className="pl-8">
                   <p className="text-slate-600 text-sm font-medium leading-snug break-words">
-                    {event.venueAddress}
+                    {venueText}
                   </p>
                   {event.venueMapUrl && (
                     <a

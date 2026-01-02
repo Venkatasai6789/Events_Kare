@@ -6,22 +6,26 @@ import { Event } from "../../types";
 interface AdminEventsProps {
   eventsList: Event[];
   setEventsList: (events: Event[]) => void;
+  onEventClick: (event: Event) => void;
 }
 
 const AdminEvents: React.FC<AdminEventsProps> = ({
   eventsList,
   setEventsList,
+  onEventClick,
 }) => {
   const [newEvent, setNewEvent] = useState({
     clubName: "",
     eventName: "",
     eventType: "Technical" as "Technical" | "Non-Technical",
     eventCategory: "Internal" as "Internal" | "External",
-    date: "",
+    startDate: "",
+    endDate: "",
     timeFrom: "",
     timeTo: "",
     location: "",
     description: "",
+    contactDetails: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,8 +37,8 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
       id: apiEventId,
       title: newEvent.eventName,
       subtitle: "",
-      startDate: newEvent.date,
-      endDate: newEvent.date,
+      startDate: newEvent.startDate,
+      endDate: newEvent.endDate,
       startTime: newEvent.timeFrom,
       endTime: newEvent.timeTo,
       location: newEvent.location,
@@ -42,6 +46,7 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
       image: "",
       organizer: newEvent.clubName,
       description: newEvent.description,
+      contactInfo: newEvent.contactDetails || undefined,
       registrationFees: "Free",
       registrationUrl: "#",
       registered: 0,
@@ -66,11 +71,14 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
           event_name: newEvent.eventName,
           event_type: newEvent.eventType,
           category: newEvent.eventCategory,
-          date: newEvent.date,
+          start_date: newEvent.startDate,
+          end_date: newEvent.endDate,
+          date: newEvent.startDate,
           time_from: newEvent.timeFrom,
           time_to: newEvent.timeTo,
           location: newEvent.location,
           description: newEvent.description,
+          contact_details: newEvent.contactDetails,
           created_by: newEvent.clubName,
         }),
       });
@@ -89,11 +97,13 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
         eventName: "",
         eventType: "Technical",
         eventCategory: "Internal",
-        date: "",
+        startDate: "",
+        endDate: "",
         timeFrom: "",
         timeTo: "",
         location: "",
         description: "",
+        contactDetails: "",
       });
     } finally {
       setIsSubmitting(false);
@@ -194,18 +204,37 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                      Date
-                    </label>
-                    <input
-                      required
-                      type="date"
-                      value={newEvent.date}
-                      onChange={(e) =>
-                        setNewEvent({ ...newEvent, date: e.target.value })
-                      }
-                      className="w-full p-3 bg-slate-50 border rounded-xl text-xs"
-                    />
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                        Event Start Date
+                      </label>
+                      <input
+                        required
+                        type="date"
+                        value={newEvent.startDate}
+                        onChange={(e) =>
+                          setNewEvent({
+                            ...newEvent,
+                            startDate: e.target.value,
+                          })
+                        }
+                        className="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                        Event End Date
+                      </label>
+                      <input
+                        required
+                        type="date"
+                        value={newEvent.endDate}
+                        onChange={(e) =>
+                          setNewEvent({ ...newEvent, endDate: e.target.value })
+                        }
+                        className="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">
@@ -254,6 +283,22 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                    Contact Details
+                  </label>
+                  <textarea
+                    value={newEvent.contactDetails}
+                    onChange={(e) =>
+                      setNewEvent({
+                        ...newEvent,
+                        contactDetails: e.target.value,
+                      })
+                    }
+                    placeholder="Phone number / Email / Coordinator name"
+                    className="w-full p-3 bg-slate-50 border rounded-xl text-xs min-h-[72px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
                     Event Description
                   </label>
                   <textarea
@@ -282,7 +327,7 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             {eventsList.map((e) => (
-              <EventCard key={e.id} event={e} />
+              <EventCard key={e.id} event={e} onClick={onEventClick} />
             ))}
           </div>
         </div>
