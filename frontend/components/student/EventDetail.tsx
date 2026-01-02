@@ -1,7 +1,19 @@
-
-import React from 'react';
-import { ChevronLeft, MapPin, Calendar, Clock, ArrowRight, Building2, Users, Info, CreditCard, ExternalLink, Mail, Phone } from 'lucide-react';
-import { Event } from '../../types';
+import React from "react";
+import {
+  ChevronLeft,
+  MapPin,
+  Calendar,
+  Clock,
+  ArrowRight,
+  Building2,
+  Users,
+  Info,
+  CreditCard,
+  ExternalLink,
+  Mail,
+  Phone,
+} from "lucide-react";
+import { Event } from "../../types";
 
 interface EventDetailProps {
   event: Event;
@@ -10,17 +22,27 @@ interface EventDetailProps {
 
 const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
   // Format dates
-  const startDate = event.startDate ? new Date(event.startDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
+  const startDate = event.startDate
+    ? new Date(event.startDate).toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "Date TBA";
 
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isTagsExpanded, setIsTagsExpanded] = React.useState(false);
 
   return (
     <div className="animate-in slide-in-from-bottom-8 duration-500">
-
       {/* Hero Section - Matching ClubDetail */}
       <div className="relative h-64 md:h-80 rounded-[2.5rem] overflow-hidden mb-8 group bg-slate-900">
-        <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80" />
+        <img
+          src={event.image}
+          alt={event.title}
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
 
         <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full">
@@ -47,7 +69,6 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
 
       {/* Content Grid - 2/3 + 1/3 Layout */}
       <div className="grid lg:grid-cols-3 gap-8 pb-20">
-
         {/* Main Content (Left) */}
         <div className="lg:col-span-2 space-y-10">
           {/* About */}
@@ -58,19 +79,23 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
               </div>
               <h3 className="text-xl font-black text-slate-900">About Event</h3>
             </div>
-            <div className={`prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-line font-medium text-base relative ${!isExpanded ? 'max-h-32 overflow-hidden' : ''}`}>
+            <div
+              className={`prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-line break-words font-medium text-base relative ${
+                !isExpanded ? "max-h-48 overflow-hidden" : ""
+              }`}
+            >
               {event.description}
               {!isExpanded && (
-                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent flex items-end justify-center pb-2" />
+                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/90 to-transparent flex items-end justify-center pb-2" />
               )}
             </div>
-            {event.description.length > 300 && (
+            {event.description && event.description.trim().length > 0 && (
               <div className="mt-4 flex justify-center">
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="px-6 py-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2"
                 >
-                  {isExpanded ? 'Show Less' : 'Read Full Description'}
+                  {isExpanded ? "Show Less" : "Show Full Description"}
                 </button>
               </div>
             )}
@@ -78,13 +103,16 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
 
           {/* Registration Details / Fees - Only show if valid content exists */}
           {(event.feeDetails || event.registrationFees) &&
-            (event.feeDetails !== "N/A" && event.registrationFees !== "N/A") && (
+            event.feeDetails !== "N/A" &&
+            event.registrationFees !== "N/A" && (
               <section className="bg-white p-8 rounded-[2.5rem] border border-slate-200">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
                     <CreditCard className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-black text-slate-900">Registration Details</h3>
+                  <h3 className="text-xl font-black text-slate-900">
+                    Registration Details
+                  </h3>
                 </div>
                 <div className="prose prose-slate max-w-none text-slate-700 whitespace-pre-line font-medium bg-slate-50 p-6 rounded-2xl border border-slate-100">
                   {event.feeDetails || event.registrationFees}
@@ -99,15 +127,22 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
                 <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
                   <Users className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-black text-slate-900">Who Can Apply</h3>
+                <h3 className="text-xl font-black text-slate-900">
+                  Who Can Apply
+                </h3>
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {event.departments.slice(0, isTagsExpanded ? undefined : 15).map((dept, idx) => (
-                  <span key={idx} className="px-4 py-2 bg-slate-100 rounded-xl text-slate-600 text-[11px] font-black uppercase tracking-wider hover:bg-purple-50 hover:text-purple-600 transition-colors cursor-default border border-transparent hover:border-purple-100">
-                    {dept}
-                  </span>
-                ))}
+                {event.departments
+                  .slice(0, isTagsExpanded ? undefined : 15)
+                  .map((dept, idx) => (
+                    <span
+                      key={idx}
+                      className="px-4 py-2 bg-slate-100 rounded-xl text-slate-600 text-[11px] font-black uppercase tracking-wider hover:bg-purple-50 hover:text-purple-600 transition-colors cursor-default border border-transparent hover:border-purple-100"
+                    >
+                      {dept}
+                    </span>
+                  ))}
 
                 {!isTagsExpanded && event.departments.length > 15 && (
                   <button
@@ -133,7 +168,6 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
 
         {/* Sidebar (Right) */}
         <div className="space-y-8">
-
           {/* Registration Card (Dark Style like Recruitment Drive) */}
           <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
@@ -141,9 +175,11 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
               <h3 className="text-xl font-black mb-2">Registration</h3>
 
               <div className="mb-8 mt-6">
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mb-2">FEE</p>
+                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mb-2">
+                  FEE
+                </p>
                 <div className="text-4xl font-black text-white tracking-tight">
-                  {event.feeShort === 'Free' ? (
+                  {event.feeShort === "Free" ? (
                     <span className="text-emerald-400">FREE</span>
                   ) : (
                     event.feeShort || "Paid"
@@ -164,7 +200,6 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
 
           {/* Quick Info Card */}
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
-
             {/* Date & Time */}
             <div>
               <div className="flex items-center gap-3 mb-3 text-slate-900">
@@ -173,18 +208,28 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
               </div>
               <div className="space-y-2 pl-8">
                 <p className="text-slate-600 text-sm font-medium">
-                  {event.startDate && event.endDate && event.startDate !== event.endDate ? (
+                  {event.startDate &&
+                  event.endDate &&
+                  event.startDate !== event.endDate ? (
                     <>
-                      {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      {' - '}
-                      {new Date(event.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {new Date(event.startDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                      {" - "}
+                      {new Date(event.endDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </>
                   ) : (
                     startDate
                   )}
                 </p>
                 <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
-                  <Clock className="w-3 h-3" /> {event.startTime} - {event.endTime}
+                  <Clock className="w-3 h-3" /> {event.startTime} -{" "}
+                  {event.endTime}
                 </div>
 
                 {/* Registration Deadline */}
@@ -202,7 +247,9 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
                 <Building2 className="w-5 h-5 text-indigo-600" />
                 <span className="font-black text-sm">Organizer</span>
               </div>
-              <p className="text-slate-600 text-sm pl-8 font-medium leading-snug">{event.organizer}</p>
+              <p className="text-slate-600 text-sm pl-8 font-medium leading-snug">
+                {event.organizer}
+              </p>
             </div>
 
             {/* Venue */}
@@ -213,7 +260,9 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
                   <span className="font-black text-sm">Venue</span>
                 </div>
                 <div className="pl-8">
-                  <p className="text-slate-600 text-sm font-medium leading-snug break-words">{event.venueAddress}</p>
+                  <p className="text-slate-600 text-sm font-medium leading-snug break-words">
+                    {event.venueAddress}
+                  </p>
                   {event.venueMapUrl && (
                     <a
                       href={event.venueMapUrl}
@@ -237,13 +286,17 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
                 </div>
                 <div className="pl-8">
                   {/* Primitive parsing for contact info to split emails/phones if they are messy */}
-                  {event.contactInfo.split(/(?:,|\n|&|and)\s+/).map((line, i) => (
-                    line.trim().length > 3 && (
-                      <p key={i} className="text-slate-600 text-sm font-medium leading-relaxed break-words mb-1">
-                        {line.trim()}
-                      </p>
-                    )
-                  ))}
+                  {event.contactInfo.split(/(?:,|\n|&|and)\s+/).map(
+                    (line, i) =>
+                      line.trim().length > 3 && (
+                        <p
+                          key={i}
+                          className="text-slate-600 text-sm font-medium leading-relaxed break-words mb-1"
+                        >
+                          {line.trim()}
+                        </p>
+                      )
+                  )}
                 </div>
               </div>
             )}
