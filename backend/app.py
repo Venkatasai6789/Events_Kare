@@ -8,11 +8,20 @@ try:
 except ImportError:  # pragma: no cover
     from api import api
 
+try:
+    from .routes.admin import admin_bp
+    from .routes.student import student_bp
+except ImportError:  # pragma: no cover
+    from routes.admin import admin_bp
+    from routes.student import student_bp
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
     CORS(app)
     app.register_blueprint(api)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(student_bp)
     return app
 
 

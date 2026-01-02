@@ -15,20 +15,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     <div className="min-h-screen flex bg-white font-['Poppins']">
-      <div className="hidden lg:flex w-1/2 bg-[#0f172a] relative items-center justify-center overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url(https://futurebanao.com/wp-content/uploads/2025/03/KARE_1.jpg)] bg-cover bg-center opacity-20" />
-        <div className="relative z-20 p-12 text-white max-w-lg">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-2xl">
-            <span className="font-black text-3xl">C</span>
-          </div>
-          <h1 className="text-6xl font-black mb-6 tracking-tight leading-tight">
-            Campus
-            <br />
-            Connect.
+      <div className="hidden lg:flex w-1/2 bg-[#0f172a] relative items-start justify-start overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url(https://futurebanao.com/wp-content/uploads/2025/03/KARE_1.jpg)] bg-cover bg-center opacity-70" />
+        <div className="absolute inset-0 bg-slate-900/10" />
+
+        <div className="relative z-20 pt-8 px-12 max-w-lg">
+          <h1 className="inline-flex items-baseline gap-4 text-5xl font-black tracking-tight leading-none text-blue-950 bg-white/60 backdrop-blur-sm rounded-2xl px-5 py-4">
+            <span>Campus</span>
+            <span>Connect.</span>
           </h1>
-          <p className="text-xl text-slate-300 leading-relaxed font-medium">
-            Your entire university life, organized in one place.
-          </p>
         </div>
       </div>
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">

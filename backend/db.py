@@ -40,3 +40,15 @@ def close_client() -> None:
     if _client is not None:
         _client.close()
         _client = None
+
+
+class _LazyDB:
+    def __getattr__(self, item):
+        return getattr(get_db(), item)
+
+    def __getitem__(self, item):
+        return get_db()[item]
+
+
+# Backwards compatible handle for code that expects `db`.
+db = _LazyDB()
