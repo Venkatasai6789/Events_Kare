@@ -33,7 +33,7 @@ const App: React.FC = () => {
   const [userRole, setUserRole] = useState<"student" | "admin" | "hod">(
     "student"
   );
-  const [currentView, setView] = useState("discover");
+  const [currentView, setView] = useState("events");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -248,7 +248,55 @@ const App: React.FC = () => {
     setShowLogoutConfirm(false);
   };
 
-  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
+  if (!isLoggedIn) {
+    if (currentView === "login") return <Login onLogin={handleLogin} />;
+    if (currentView !== "events" && currentView !== "event-detail") {
+      return <Login onLogin={handleLogin} />;
+    }
+
+    const setPublicView = (view: string) => {
+      if (view === "events") return setView("events");
+      if (view === "event-detail") return setView("event-detail");
+      setView("login");
+    };
+
+    return (
+      <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900 font-['Poppins']">
+        <Header
+          currentView={currentView}
+          setView={setPublicView}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          userType="student"
+          onLogout={() => {}}
+          showLoginButton
+          onLogin={() => setView("login")}
+        />
+        <main className="flex-grow w-full max-w-7xl mx-auto px-6 py-8">
+          {currentView === "event-detail" && selectedEvent ? (
+            <EventDetail
+              event={selectedEvent}
+              onBack={() => setView("events")}
+              isPublic
+            />
+          ) : (
+            <StudentEvents
+              eventsList={eventsList}
+              searchQuery={searchQuery}
+              onEventClick={handleEventClick}
+              activeTab={
+                eventsActiveTab === "Registered" ? "All" : eventsActiveTab
+              }
+              onTabChange={(tab) =>
+                setEventsActiveTab(tab === "Registered" ? "All" : tab)
+              }
+              isPublic
+            />
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900 font-['Poppins']">

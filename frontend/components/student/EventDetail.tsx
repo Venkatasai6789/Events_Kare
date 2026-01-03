@@ -18,9 +18,14 @@ import { Event } from "../../types";
 interface EventDetailProps {
   event: Event;
   onBack: () => void;
+  isPublic?: boolean;
 }
 
-const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
+const EventDetail: React.FC<EventDetailProps> = ({
+  event,
+  onBack,
+  isPublic,
+}) => {
   // Format dates
   const startDate = event.startDate
     ? new Date(event.startDate).toLocaleDateString("en-US", {
@@ -40,6 +45,10 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
       ? "Non-Technical"
       : "");
   const eventCategoryLabel = event.eventCategory || event.type || "";
+
+  const isExternal =
+    event.type === "External" || event.eventCategory === "External";
+  const canRegister = !isPublic || isExternal;
 
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isTagsExpanded, setIsTagsExpanded] = React.useState(false);
@@ -197,14 +206,20 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBack }) => {
                 </div>
               </div>
 
-              <a
-                href={event.registrationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-4 bg-white text-slate-900 rounded-2xl font-bold text-sm hover:bg-blue-50 transition-all active:scale-95 shadow-lg group-hover:shadow-blue-900/20"
-              >
-                Register Now <ArrowRight className="w-4 h-4" />
-              </a>
+              {canRegister ? (
+                <a
+                  href={event.registrationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-4 bg-white text-slate-900 rounded-2xl font-bold text-sm hover:bg-blue-50 transition-all active:scale-95 shadow-lg group-hover:shadow-blue-900/20"
+                >
+                  Register Now <ArrowRight className="w-4 h-4" />
+                </a>
+              ) : (
+                <div className="w-full py-4 px-4 rounded-2xl font-bold text-sm bg-white/10 text-slate-200 border border-white/10 text-center leading-snug">
+                  Registration available for internal students only
+                </div>
+              )}
             </div>
           </div>
 

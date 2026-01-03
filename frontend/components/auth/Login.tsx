@@ -6,10 +6,29 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [role, setRole] = React.useState<"student" | "admin">("student");
+  const [role, setRole] = React.useState<"student" | "admin" | "hod">(
+    "student"
+  );
+  const [loginId, setLoginId] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+
+  const validateHodCredentials = () => {
+    const isValid = loginId.trim().length > 0 && password.trim().length > 0;
+    if (!isValid) {
+      setError("Please enter valid credentials");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (role === "hod" && !validateHodCredentials()) return;
+
+    setError(null);
     onLogin(role);
   };
 
@@ -36,7 +55,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
           <div className="bg-slate-100 p-1.5 rounded-xl flex mb-8">
             <button
-              onClick={() => setRole("student")}
+              onClick={() => {
+                setRole("student");
+                setError(null);
+              }}
               className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
                 role === "student"
                   ? "bg-white text-slate-900 shadow-sm"
@@ -46,7 +68,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               Student
             </button>
             <button
-              onClick={() => setRole("admin")}
+              onClick={() => {
+                setRole("admin");
+                setError(null);
+              }}
               className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
                 role === "admin"
                   ? "bg-white text-slate-900 shadow-sm"
@@ -59,13 +84,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                Email
+                {role === "hod" ? "HOD ID / Email" : "Email"}
               </label>
               <div className="relative">
                 <input
-                  type="email"
+                  type={role === "hod" ? "text" : "email"}
                   className="w-full p-4 pl-12 bg-slate-50 border rounded-xl"
                   placeholder="name@university.edu"
+                  value={loginId}
+                  onChange={(e) => {
+                    setLoginId(e.target.value);
+                    if (error) setError(null);
+                  }}
                 />
                 <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
               </div>
@@ -79,6 +109,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   type="password"
                   className="w-full p-4 pl-12 bg-slate-50 border rounded-xl"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
                 />
                 <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
               </div>
@@ -93,25 +128,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   Remember me
                 </span>
               </label>
-              <a
-                href="#"
-                className="text-sm font-bold text-blue-600 hover:underline"
-              >
-                Forgot?
-              </a>
+              {role === "hod" && error ? (
+                <span className="text-sm font-bold text-rose-600">{error}</span>
+              ) : null}
             </div>
             <button
               type="submit"
               className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 mt-4"
             >
               <LogIn className="w-5 h-5" />
-              Sign in as {role === "admin" ? "Admin" : "Student"}
+              Sign in as{" "}
+              {role === "admin" ? "Admin" : role === "hod" ? "HOD" : "Student"}
             </button>
 
             <div className="flex justify-center pt-6">
               <button
                 type="button"
-                onClick={() => onLogin("hod")}
+                onClick={() => {
+                  setRole("hod");
+                  if (validateHodCredentials()) onLogin("hod");
+                }}
                 className="flex items-center gap-2 px-6 py-2.5 border border-slate-200 rounded-full text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all hover:border-slate-300 active:scale-95 shadow-sm"
               >
                 <Shield className="w-4 h-4 text-blue-600" />

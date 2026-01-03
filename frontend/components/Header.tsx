@@ -18,6 +18,8 @@ interface HeaderProps {
   setSearchQuery: (query: string) => void;
   userType: "student" | "admin" | "hod";
   onLogout: () => void;
+  showLoginButton?: boolean;
+  onLogin?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -27,6 +29,8 @@ const Header: React.FC<HeaderProps> = ({
   setSearchQuery,
   userType,
   onLogout,
+  showLoginButton = false,
+  onLogin,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -256,77 +260,78 @@ const Header: React.FC<HeaderProps> = ({
             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
 
-          {/* Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
+          {showLoginButton ? (
             <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-2 p-1.5 md:p-2 rounded-full hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200 group"
+              type="button"
+              onClick={onLogin}
+              className="px-4 py-2 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all border border-slate-200/50"
             >
-              <div
-                className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-white shadow-sm ${
-                  userType === "admin" || userType === "hod"
-                    ? "bg-slate-900"
-                    : "bg-blue-600"
-                }`}
-              >
-                {userType === "admin" || userType === "hod" ? (
-                  <Shield className="w-4 h-4" />
-                ) : (
-                  <User className="w-5 h-5" />
-                )}
-              </div>
-              <ChevronDown
-                className={`hidden md:block w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                  isProfileOpen ? "rotate-180" : ""
-                }`}
-              />
+              Login
             </button>
-
-            {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 animate-in fade-in slide-in-from-top-2 duration-200 z-[60]">
-                <div className="px-5 py-3 border-b border-slate-50 mb-2">
-                  <p className="text-sm font-black text-slate-900 truncate">
-                    {userType === "admin"
-                      ? "Club Admin Access"
-                      : userType === "hod"
-                      ? "Department Head"
-                      : "Alex Thompson"}
-                  </p>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                    {userType === "admin"
-                      ? "Tech Innovators Guild"
-                      : userType === "hod"
-                      ? "HOD Access"
-                      : "Student Portal"}
-                  </p>
+          ) : (
+            /* Profile Dropdown */
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-2 p-1.5 md:p-2 rounded-full hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200 group"
+              >
+                <div
+                  className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-white shadow-sm ${
+                    userType === "admin" || userType === "hod"
+                      ? "bg-slate-900"
+                      : "bg-blue-600"
+                  }`}
+                >
+                  {userType === "admin" || userType === "hod" ? (
+                    <Shield className="w-4 h-4" />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
                 </div>
+                <ChevronDown
+                  className={`hidden md:block w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                    isProfileOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-                <div className="px-2 space-y-1">
-                  <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    Change Password
-                  </button>
-                </div>
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 animate-in fade-in slide-in-from-top-2 duration-200 z-[60]">
+                  <div className="px-5 py-3 border-b border-slate-50 mb-2">
+                    <p className="text-sm font-black text-slate-900 truncate">
+                      {userType === "admin"
+                        ? "Club Admin Access"
+                        : userType === "hod"
+                        ? "Department Head"
+                        : "Alex Thompson"}
+                    </p>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                      {userType === "admin"
+                        ? "Tech Innovators Guild"
+                        : userType === "hod"
+                        ? "HOD Access"
+                        : "Student Portal"}
+                    </p>
+                  </div>
 
-                <div className="mx-2 mt-3 pt-3 border-t border-slate-50">
-                  <button
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      onLogout();
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors"
-                  >
-                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-100 text-rose-600">
-                      <LogOut className="w-4 h-4" />
-                    </div>
-                    Logout Account
-                  </button>
+                  <div className="mx-2 mt-3 pt-3 border-t border-slate-50">
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        onLogout();
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors"
+                    >
+                      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+                        <LogOut className="w-4 h-4" />
+                      </div>
+                      Logout Account
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Mobile Toggle */}
           <button

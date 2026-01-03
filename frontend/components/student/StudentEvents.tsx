@@ -9,6 +9,7 @@ interface StudentEventsProps {
   onEventClick: (event: Event) => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isPublic?: boolean;
 }
 
 const StudentEvents: React.FC<StudentEventsProps> = ({
@@ -17,6 +18,7 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
   onEventClick,
   activeTab,
   onTabChange,
+  isPublic,
 }) => {
   const [serverEvents, setServerEvents] = useState<Event[] | null>(null);
 
@@ -88,13 +90,15 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
   }, []);
 
   const effectiveEvents = useMemo(() => {
+    if (isPublic && serverEvents && serverEvents.length > 0)
+      return serverEvents;
     if (!serverEvents || serverEvents.length === 0) return eventsList;
     const merged = new Map<string, Event>();
     // Keep existing list (includes external events), then overlay server events.
     for (const ev of eventsList) merged.set(ev.id, ev);
     for (const ev of serverEvents) merged.set(ev.id, ev);
     return Array.from(merged.values());
-  }, [eventsList, serverEvents]);
+  }, [eventsList, serverEvents, isPublic]);
 
   const filteredEvents = useMemo(() => {
     let filtered = effectiveEvents;
@@ -110,7 +114,7 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
       filtered = filtered.filter((e) => e.type !== "External");
     else if (activeTab === "External")
       filtered = filtered.filter((e) => e.type === "External");
-    else if (activeTab === "Registered")
+    else if (activeTab === "Registered" && !isPublic)
       filtered = filtered.filter((e) => e.isRegistered);
 
     return filtered;
@@ -185,7 +189,12 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
           </div>
         </div>
         <div className="bg-white border border-slate-200 p-1.5 rounded-full flex overflow-x-auto hide-scrollbar shadow-sm">
-          {["All", "Internal", "External", "Registered"].map((t) => (
+          {[
+            "All",
+            "Internal",
+            "External",
+            ...(isPublic ? [] : ["Registered"]),
+          ].map((t) => (
             <button
               key={t}
               onClick={() => onTabChange(t)}
@@ -216,7 +225,12 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {technicalEvents.map((e) => (
-              <EventCard key={e.id} event={e} onClick={onEventClick} />
+              <EventCard
+                key={e.id}
+                event={e}
+                onClick={onEventClick}
+                isPublic={isPublic}
+              />
             ))}
           </div>
         </section>
@@ -237,7 +251,12 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {nonTechnicalEvents.map((e) => (
-              <EventCard key={e.id} event={e} onClick={onEventClick} />
+              <EventCard
+                key={e.id}
+                event={e}
+                onClick={onEventClick}
+                isPublic={isPublic}
+              />
             ))}
           </div>
         </section>
