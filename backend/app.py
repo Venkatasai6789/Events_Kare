@@ -11,9 +11,11 @@ except ImportError:  # pragma: no cover
 try:
     from .routes.admin import admin_bp
     from .routes.student import student_bp
+    from .routes.hod import hod_bp
 except ImportError:  # pragma: no cover
     from routes.admin import admin_bp
     from routes.student import student_bp
+    from routes.hod import hod_bp
 
 
 def create_app() -> Flask:
@@ -22,6 +24,7 @@ def create_app() -> Flask:
     app.register_blueprint(api)
     app.register_blueprint(admin_bp)
     app.register_blueprint(student_bp)
+    app.register_blueprint(hod_bp)
     return app
 
 
