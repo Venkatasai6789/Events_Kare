@@ -1,7 +1,6 @@
 import React from "react";
 import {
   User,
-  Copy,
   QrCode,
   Download,
   Share2,
@@ -91,7 +90,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ setView }) => {
                   <p className="text-xl font-black tracking-wider font-mono">
                     {STUDENT_PROFILE.registerNumber}
                   </p>
-                  <Copy className="w-4 h-4 text-slate-500 cursor-pointer hover:text-white" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">

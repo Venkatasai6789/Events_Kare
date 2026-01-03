@@ -1,16 +1,34 @@
-
-import React from 'react';
-import { Mail, Lock, LogIn, Shield } from 'lucide-react';
+import React from "react";
+import { Mail, Lock, LogIn, Shield } from "lucide-react";
 
 interface LoginProps {
-  onLogin: (role: 'student' | 'admin' | 'hod') => void;
+  onLogin: (role: "student" | "admin" | "hod") => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [role, setRole] = React.useState<'student' | 'admin'>('student');
+  const [role, setRole] = React.useState<"student" | "admin" | "hod">(
+    "student"
+  );
+  const [loginId, setLoginId] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+
+  const validateHodCredentials = () => {
+    const isValid = loginId.trim().length > 0 && password.trim().length > 0;
+    if (!isValid) {
+      setError("Please enter valid credentials");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (role === "hod" && !validateHodCredentials()) return;
+
+    setError(null);
     onLogin(role);
   };
 
@@ -22,60 +40,119 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-2xl">
             <span className="font-black text-3xl">C</span>
           </div>
-          <h1 className="text-6xl font-black mb-6 tracking-tight leading-tight">Campus<br/>Connect.</h1>
-          <p className="text-xl text-slate-300 leading-relaxed font-medium">Your entire university life, organized in one place.</p>
+          <h1 className="text-6xl font-black mb-6 tracking-tight leading-tight">
+            Campus
+            <br />
+            Connect.
+          </h1>
+          <p className="text-xl text-slate-300 leading-relaxed font-medium">
+            Your entire university life, organized in one place.
+          </p>
         </div>
       </div>
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="text-center lg:text-left mb-10">
-            <h2 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Welcome Back</h2>
+            <h2 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">
+              Welcome Back
+            </h2>
             <p className="text-slate-500 font-medium">Sign in to your portal</p>
           </div>
           <div className="bg-slate-100 p-1.5 rounded-xl flex mb-8">
-            <button 
-              onClick={() => setRole('student')} 
-              className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${role === 'student' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+            <button
+              onClick={() => {
+                setRole("student");
+                setError(null);
+              }}
+              className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
+                role === "student"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500"
+              }`}
             >
               Student
             </button>
-            <button 
-              onClick={() => setRole('admin')} 
-              className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${role === 'admin' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+            <button
+              onClick={() => {
+                setRole("admin");
+                setError(null);
+              }}
+              className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
+                role === "admin"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500"
+              }`}
             >
               Admin
             </button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Email</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+                {role === "hod" ? "HOD ID / Email" : "Email"}
+              </label>
               <div className="relative">
-                <input type="email" className="w-full p-4 pl-12 bg-slate-50 border rounded-xl" placeholder="name@university.edu" />
+                <input
+                  type={role === "hod" ? "text" : "email"}
+                  className="w-full p-4 pl-12 bg-slate-50 border rounded-xl"
+                  placeholder="name@university.edu"
+                  value={loginId}
+                  onChange={(e) => {
+                    setLoginId(e.target.value);
+                    if (error) setError(null);
+                  }}
+                />
                 <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Password</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+                Password
+              </label>
               <div className="relative">
-                <input type="password" className="w-full p-4 pl-12 bg-slate-50 border rounded-xl" placeholder="••••••••" />
+                <input
+                  type="password"
+                  className="w-full p-4 pl-12 bg-slate-50 border rounded-xl"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
+                />
                 <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
               </div>
             </div>
             <div className="flex items-center justify-between pt-2">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300" />
-                <span className="text-sm font-bold text-slate-500">Remember me</span>
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-slate-300"
+                />
+                <span className="text-sm font-bold text-slate-500">
+                  Remember me
+                </span>
               </label>
-              <a href="#" className="text-sm font-bold text-blue-600 hover:underline">Forgot?</a>
+              {role === "hod" && error ? (
+                <span className="text-sm font-bold text-rose-600">{error}</span>
+              ) : null}
             </div>
-            <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 mt-4">
-              <LogIn className="w-5 h-5" />Sign in as {role === 'admin' ? 'Admin' : 'Student'}
+            <button
+              type="submit"
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 mt-4"
+            >
+              <LogIn className="w-5 h-5" />
+              Sign in as{" "}
+              {role === "admin" ? "Admin" : role === "hod" ? "HOD" : "Student"}
             </button>
-            
+
             <div className="flex justify-center pt-6">
-              <button 
-                type="button" 
-                onClick={() => onLogin('hod')} 
+              <button
+                type="button"
+                onClick={() => {
+                  setRole("hod");
+                  if (validateHodCredentials()) onLogin("hod");
+                }}
                 className="flex items-center gap-2 px-6 py-2.5 border border-slate-200 rounded-full text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all hover:border-slate-300 active:scale-95 shadow-sm"
               >
                 <Shield className="w-4 h-4 text-blue-600" />
