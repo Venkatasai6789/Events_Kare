@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import Header from "./components/Header";
-import { UPCOMING_EVENTS, JOB_APPLICATIONS } from "./constants";
+import {
+  UPCOMING_EVENTS,
+  JOB_APPLICATIONS,
+  STUDENT_PROFILE,
+} from "./constants";
 import { Event, Achievement, Club, JobApplication } from "./types";
 import { LogOut, Plus } from "lucide-react";
 
@@ -292,6 +296,9 @@ const App: React.FC = () => {
         setSearchQuery={setSearchQuery}
         userType={userRole}
         onLogout={handleLogoutRequest}
+        studentId={
+          userRole === "student" ? STUDENT_PROFILE.registerNumber : undefined
+        }
       />
       <main className="flex-grow w-full max-w-7xl mx-auto px-6 py-8">
         {/* STUDENT VIEWS */}

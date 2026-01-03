@@ -15,8 +15,6 @@ const EventCard: React.FC<EventCardProps> = ({
   onClick,
   isPublic,
 }) => {
-  // Parse startDate string for day and month
-  // Handle empty or invalid dates gracefully
   const startDate = event.startDate ? new Date(event.startDate) : new Date();
   const month = startDate.toLocaleString("default", { month: "short" });
   const day = startDate.getDate();

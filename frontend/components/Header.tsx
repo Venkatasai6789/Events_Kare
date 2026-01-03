@@ -20,7 +20,18 @@ interface HeaderProps {
   onLogout: () => void;
   showLoginButton?: boolean;
   onLogin?: () => void;
+  studentId?: string;
 }
+
+type NotificationItem = {
+  student_id: string;
+  title: string;
+  message: string;
+  type: "event" | "vacancy" | "certificate" | "od";
+  reference_id: string;
+  created_at: string;
+  is_read: boolean;
+};
 
 const Header: React.FC<HeaderProps> = ({
   currentView,
@@ -31,13 +42,19 @@ const Header: React.FC<HeaderProps> = ({
   onLogout,
   showLoginButton = false,
   onLogin,
+  studentId,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isNotifLoading, setIsNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   // Handle scroll effect for glassmorphism
   useEffect(() => {
@@ -61,6 +78,57 @@ const Header: React.FC<HeaderProps> = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Close notifications dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(event.target as Node)
+      ) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchNotifications = async () => {
+    if (!studentId) return;
+    setIsNotifLoading(true);
+    setNotifError(null);
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:5000/api/student/notifications?student_id=${encodeURIComponent(
+          studentId
+        )}`
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setNotifError(data?.error || "Failed to load notifications");
+        return;
+      }
+      setNotifications(
+        Array.isArray(data?.notifications) ? data.notifications : []
+      );
+    } catch {
+      setNotifError("Failed to load notifications");
+    } finally {
+      setIsNotifLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isNotifOpen) return;
+    void fetchNotifications();
+    const intervalId = window.setInterval(() => {
+      void fetchNotifications();
+    }, 15000);
+    return () => window.clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNotifOpen, studentId]);
+
+  const hasUnread = notifications.some((n) => !n.is_read);
 
   // Auto-focus input when expanding
   useEffect(() => {
@@ -255,10 +323,72 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          <button className="hidden md:flex w-10 h-10 items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          {userType === "student" && !showLoginButton && studentId && (
+            <div className="relative" ref={notifRef}>
+              <button
+                type="button"
+                onClick={() => setIsNotifOpen((v) => !v)}
+                className="hidden md:flex w-10 h-10 items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all relative"
+              >
+                <Bell className="w-5 h-5" />
+                {hasUnread && (
+                  <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 animate-in fade-in slide-in-from-top-2 duration-200 z-[60]">
+                  <div className="px-5 py-3 border-b border-slate-50 mb-2">
+                    <p className="text-sm font-black text-slate-900 truncate">
+                      Notifications
+                    </p>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto">
+                    {isNotifLoading ? (
+                      <div className="px-5 py-4 text-sm font-medium text-slate-500">
+                        Loading...
+                      </div>
+                    ) : notifError ? (
+                      <div className="px-5 py-4 text-sm font-medium text-rose-600">
+                        {notifError}
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="px-5 py-4 text-sm font-medium text-slate-500">
+                        No notifications
+                      </div>
+                    ) : (
+                      <div className="px-2">
+                        {notifications.map((n) => (
+                          <div
+                            key={`${n.type}-${n.reference_id}-${n.created_at}`}
+                            className="px-3 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-black text-slate-900 truncate">
+                                  {n.title}
+                                </p>
+                                <p className="text-xs font-medium text-slate-500 leading-relaxed mt-1">
+                                  {n.message}
+                                </p>
+                              </div>
+                              {!n.is_read && (
+                                <span className="mt-1 w-2 h-2 bg-blue-600 rounded-full flex-shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
+                              {new Date(n.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {showLoginButton ? (
             <button

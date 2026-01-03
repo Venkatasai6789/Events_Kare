@@ -14,6 +14,40 @@ except ImportError:  # pragma: no cover
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
 
+def _insert_notification(
+    db,
+    *,
+    student_id: str,
+    title: str,
+    message: str,
+    notif_type: str,
+    reference_id: str,
+) -> bool:
+    """Insert a notification if it doesn't already exist.
+
+    Dedupe key: (student_id, type, reference_id)
+    """
+
+    existing = db.notifications.find_one(
+        {"student_id": student_id, "type": notif_type, "reference_id": reference_id},
+        {"_id": 1},
+    )
+    if existing:
+        return False
+
+    doc = {
+        "student_id": student_id,
+        "title": title,
+        "message": message,
+        "type": notif_type,  # event | vacancy | certificate | od
+        "reference_id": reference_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "is_read": False,
+    }
+    db.notifications.insert_one(doc)
+    return True
+
+
 def _require_str(payload: dict, key: str) -> str:
     value = payload.get(key)
     if value is None:
@@ -182,6 +216,19 @@ def publish_event():
         db = get_db()
         db.events.insert_one(event_doc)
 
+        try:
+            _insert_notification(
+                db,
+                student_id="all",
+                title="New Event Posted",
+                message=f"New event posted: {event_name} by {club_name}",
+                notif_type="event",
+                reference_id=event_doc["event_id"],
+            )
+        except Exception:
+            # Notifications should not block publishing.
+            pass
+
         return jsonify({"success": True, "event_id": event_doc["event_id"], "status": "Published"}), 201
 
     except ValueError as exc:
@@ -263,7 +310,102 @@ def create_vacancy():
         db = get_db()
         db.vacancies.insert_one(vacancy_doc)
 
+        if status == "Published":
+            try:
+                _insert_notification(
+                    db,
+                    student_id="all",
+                    title="New Club Vacancies",
+                    message=f"New club vacancies available in {club_name}",
+                    notif_type="vacancy",
+                    reference_id=vacancy_doc["vacancy_id"],
+                )
+            except Exception:
+                pass
+
         return jsonify({"success": True, "vacancy_id": vacancy_doc["vacancy_id"], "status": status}), 201
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@admin_bp.post("/certificates")
+def send_certificate():
+    """Issue a certificate (URL-only for now) and notify the student.
+
+    Required JSON fields:
+    - student_id
+    - student_name
+    - event_id
+    - event_name
+    - club_name
+    - issued_by
+
+    Optional JSON fields:
+    - certificate_image_url (dummy image URL for now)
+    """
+
+    if not request.is_json:
+        return jsonify({"error": "Request body must be JSON"}), 400
+
+    payload = request.get_json(silent=True) or {}
+
+    try:
+        student_id = _require_str(payload, "student_id")
+        student_name = _require_str(payload, "student_name")
+        event_id = _require_str(payload, "event_id")
+        event_name = _require_str(payload, "event_name")
+        club_name = _require_str(payload, "club_name")
+        issued_by = _require_str(payload, "issued_by")
+
+        certificate_image_url = payload.get("certificate_image_url")
+        if certificate_image_url is None:
+            certificate_image_url = ""
+        if not isinstance(certificate_image_url, str):
+            raise ValueError("Field 'certificate_image_url' must be a string")
+        certificate_image_url = certificate_image_url.strip()
+        if not certificate_image_url:
+            # Default dummy certificate URL (temporary)
+            certificate_image_url = "https://placehold.co/1200x800/png?text=Certificate"
+
+        issued_at = datetime.now(timezone.utc).isoformat()
+
+        db = get_db()
+
+        certificate_doc = {
+            "certificate_id": uuid4().hex,
+            "student_id": student_id,
+            "student_name": student_name,
+            "event_id": event_id,
+            "event_name": event_name,
+            "club_name": club_name,
+            "certificate_image_url": certificate_image_url,
+            "issued_by": issued_by,
+            "issued_at": issued_at,
+            "status": "Issued",
+        }
+        db.certificates.insert_one(certificate_doc)
+
+        _insert_notification(
+            db,
+            student_id=student_id,
+            title="Certificate Available",
+            message=f"Your certificate for {event_name} is now available",
+            notif_type="certificate",
+            reference_id=event_id,
+        )
+
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "certificate_id": certificate_doc["certificate_id"],
+                    "status": "Issued",
+                }
+            ),
+            201,
+        )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
