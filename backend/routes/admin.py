@@ -6,6 +6,11 @@ from uuid import uuid4
 from flask import Blueprint, jsonify, request
 
 try:
+    from bson import ObjectId
+except Exception:  # pragma: no cover
+    ObjectId = None
+
+try:
     from ..db import get_db
 except ImportError:  # pragma: no cover
     from db import get_db
@@ -408,5 +413,105 @@ def send_certificate():
         )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+def _find_attendance_by_id(db, attendance_id: str):
+    attendance_id = (attendance_id or "").strip()
+    if not attendance_id:
+        return None
+
+    # Prefer Mongo ObjectId when possible.
+    if ObjectId is not None:
+        try:
+            if len(attendance_id) == 24:
+                return db.attendances.find_one({"_id": ObjectId(attendance_id)})
+        except Exception:
+            pass
+
+    # Fallback: support apps that store an explicit attendance_id.
+    return db.attendances.find_one({"attendance_id": attendance_id})
+
+
+def _attendance_public_doc(doc: dict) -> dict:
+    # Frontend needs a stable string id.
+    public_id = doc.get("attendance_id")
+    if not public_id:
+        public_id = str(doc.get("_id"))
+
+    return {
+        "attendance_id": public_id,
+        "student_id": doc.get("student_id", ""),
+        "student_name": doc.get("student_name", ""),
+        "event_id": doc.get("event_id", ""),
+        "event_name": doc.get("event_name", ""),
+        "marked_at": doc.get("marked_at"),
+        "status": doc.get("status") or "Pending",
+    }
+
+
+@admin_bp.get("/attendance")
+def list_attendance_for_event():
+    """Fetch attendance records for an event.
+
+    GET /api/admin/attendance?event_id=<event_id>
+    """
+
+    try:
+        event_id = (request.args.get("event_id") or "").strip()
+        if not event_id:
+            return jsonify({"error": "event_id query param is required"}), 400
+
+        db = get_db()
+        cursor = db.attendances.find({"event_id": event_id}).sort([("marked_at", -1)])
+        records = [_attendance_public_doc(doc) for doc in cursor]
+        return jsonify({"attendances": records}), 200
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@admin_bp.post("/attendance/<attendance_id>/approve")
+def approve_attendance(attendance_id: str):
+    """Approve an attendance record.
+
+    POST /api/admin/attendance/{attendance_id}/approve
+    """
+
+    try:
+        db = get_db()
+        existing = _find_attendance_by_id(db, attendance_id)
+        if not existing:
+            return jsonify({"error": "Attendance record not found"}), 404
+
+        db.attendances.update_one(
+            {"_id": existing["_id"]},
+            {"$set": {"status": "Approved"}},
+        )
+        updated = db.attendances.find_one({"_id": existing["_id"]})
+        return jsonify({"success": True, "attendance": _attendance_public_doc(updated)}), 200
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@admin_bp.post("/attendance/<attendance_id>/reject")
+def reject_attendance(attendance_id: str):
+    """Reject an attendance record.
+
+    POST /api/admin/attendance/{attendance_id}/reject
+    """
+
+    try:
+        db = get_db()
+        existing = _find_attendance_by_id(db, attendance_id)
+        if not existing:
+            return jsonify({"error": "Attendance record not found"}), 404
+
+        db.attendances.update_one(
+            {"_id": existing["_id"]},
+            {"$set": {"status": "Rejected"}},
+        )
+        updated = db.attendances.find_one({"_id": existing["_id"]})
+        return jsonify({"success": True, "attendance": _attendance_public_doc(updated)}), 200
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500

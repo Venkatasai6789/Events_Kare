@@ -84,7 +84,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                {role === "hod" ? "HOD ID / Email" : "Email"}
+                {role === "hod" ? "FA ID / Email" : "Email"}
               </label>
               <div className="relative">
                 <input
@@ -138,7 +138,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             >
               <LogIn className="w-5 h-5" />
               Sign in as{" "}
-              {role === "admin" ? "Admin" : role === "hod" ? "HOD" : "Student"}
+              {role === "admin" ? "Admin" : role === "hod" ? "FA" : "Student"}
             </button>
 
             <div className="flex justify-center pt-6">
@@ -151,7 +151,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 className="flex items-center gap-2 px-6 py-2.5 border border-slate-200 rounded-full text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all hover:border-slate-300 active:scale-95 shadow-sm"
               >
                 <Shield className="w-4 h-4 text-blue-600" />
-                HOD Login
+                FA Login
               </button>
             </div>
           </form>
