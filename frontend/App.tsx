@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "./components/Header";
 import {
   UPCOMING_EVENTS,
   JOB_APPLICATIONS,
   STUDENT_PROFILE,
+  HOD_PROFILE,
 } from "./constants";
 import { Event, Achievement, Club, JobApplication } from "./types";
 import { LogOut, Plus } from "lucide-react";
@@ -19,11 +20,10 @@ import StudentClubs from "./components/student/StudentClubs";
 import ClubDetail from "./components/student/ClubDetail";
 import EventDetail from "./components/student/EventDetail";
 
-// HOD Components
+// FA Components (formerly HOD)
 import HODDashboard from "./components/hod/HODDashboard";
 import HODODApprovals from "./components/hod/HODODApprovals";
-import HODExternalApprovals from "./components/hod/HODExternalApprovals";
-import HODSummary from "./components/hod/HODSummary";
+import HostelPermission from "./components/hod/HostelPermission";
 
 // Admin Components
 import AdminDashboard from "./components/admin/AdminDashboard";
@@ -33,6 +33,7 @@ import AdminCertificates from "./components/admin/AdminCertificates";
 import AdminVacancies from "./components/admin/AdminVacancies";
 
 const App: React.FC = () => {
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<"student" | "admin" | "hod">(
     "student"
@@ -52,13 +53,15 @@ const App: React.FC = () => {
   const [applications, setApplications] =
     useState<JobApplication[]>(JOB_APPLICATIONS);
 
-  // HOD State
+  // FA State (formerly HOD)
   const [odRequests, setOdRequests] = useState([
     {
       id: "od-1",
       studentName: "Alex Thompson",
       rollNumber: "2023CS101",
-      eventName: "AI & ML Masterclass",
+      section: "A",
+      eventId: "1",
+      eventName: "AI & Machine Learning Masterclass",
       date: "2024-10-12",
       status: "Pending",
     },
@@ -66,7 +69,9 @@ const App: React.FC = () => {
       id: "od-2",
       studentName: "Sarah Jenkins",
       rollNumber: "2023CS105",
-      eventName: "Blockchain Summit",
+      section: "B",
+      eventId: "2",
+      eventName: "Blockchain & Web3 Summit",
       date: "2024-10-15",
       status: "Pending",
     },
@@ -74,7 +79,9 @@ const App: React.FC = () => {
       id: "od-3",
       studentName: "Michael Scott",
       rollNumber: "2022CS204",
-      eventName: "UX Design Sprint",
+      section: "A",
+      eventId: "3",
+      eventName: "UX Design Sprint: Mobile First",
       date: "2024-10-20",
       status: "Pending",
     },
@@ -82,9 +89,50 @@ const App: React.FC = () => {
       id: "od-4",
       studentName: "Pam Beesly",
       rollNumber: "2023CS112",
+      section: "A",
+      eventId: "5",
       eventName: "Cyber Security Essentials",
       date: "2024-11-05",
       status: "Pending",
+    },
+  ]);
+
+  const [hostelPermissionRequests, setHostelPermissionRequests] = useState([
+    {
+      id: "hp-1",
+      studentName: "Ananya Sharma",
+      registerNumber: "2023CS118",
+      section: "A",
+      eventName: "24-Hour Hackathon",
+      eventDateTime: "2024-11-16 18:00 - 2024-11-17 18:00",
+      eventDuration: "24 hours",
+      hostelName: "Girls Hostel - Block A",
+      status: "Pending",
+      sentToHostelHead: false,
+    },
+    {
+      id: "hp-2",
+      studentName: "Meera Iyer",
+      registerNumber: "2022CS207",
+      section: "A",
+      eventName: "Overnight UI/UX Design Sprint",
+      eventDateTime: "2024-12-03 20:00 - 2024-12-04 08:00",
+      eventDuration: "12 hours",
+      hostelName: "Girls Hostel - Block B",
+      status: "Approved",
+      sentToHostelHead: true,
+    },
+    {
+      id: "hp-3",
+      studentName: "Kavya Nair",
+      registerNumber: "2023CS141",
+      section: "B",
+      eventName: "Night Cybersecurity CTF",
+      eventDateTime: "2024-11-28 21:00 - 2024-11-29 03:00",
+      eventDuration: "6 hours",
+      hostelName: "Girls Hostel - Block A",
+      status: "Rejected",
+      sentToHostelHead: true,
     },
   ]);
 
@@ -235,7 +283,7 @@ const App: React.FC = () => {
       role === "admin"
         ? "admin-dashboard"
         : role === "hod"
-        ? "hod-dashboard"
+        ? "fa-dashboard"
         : "discover"
     );
   };
@@ -251,6 +299,83 @@ const App: React.FC = () => {
     setSearchQuery("");
     setShowLogoutConfirm(false);
   };
+
+  const sendHostelPermissionToHead = (requestId: string) => {
+    (async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/fa/hostel-permissions/${encodeURIComponent(
+            requestId
+          )}/send`,
+          { method: "POST" }
+        );
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || "Failed to send permission request");
+        }
+
+        await fetchHostelPermissions();
+        alert("Permission request sent to hostel head");
+      } catch (err: any) {
+        alert(err?.message || "Failed to send permission request");
+      }
+    })();
+  };
+
+  const fetchHostelPermissions = async () => {
+    try {
+      const faSection = (HOD_PROFILE as any).section as string | undefined;
+      const url = new URL(`${API_BASE}/api/fa/hostel-permissions`);
+      if (faSection) url.searchParams.set("section", faSection);
+
+      const res = await fetch(url.toString());
+      if (!res.ok) return;
+      const data = await res.json();
+      const items = (data?.hostel_permissions || []) as any[];
+
+      setHostelPermissionRequests(
+        items.map((d) => ({
+          id: d.id,
+          studentName: d.student_name,
+          registerNumber: d.student_id,
+          section: d.section,
+          eventName: d.event_name,
+          eventDateTime: d.event_date,
+          eventDuration: d.duration,
+          hostelName: d.hostel_name,
+          status: d.status,
+          sentToHostelHead: !!d.requested_by_fa,
+        }))
+      );
+    } catch {
+      // Keep existing in-memory state if backend isn't reachable.
+    }
+  };
+
+  useEffect(() => {
+    if (
+      !(
+        isLoggedIn &&
+        userRole === "hod" &&
+        currentView === "fa-hostel-permission"
+      )
+    )
+      return;
+
+    let cancelled = false;
+    const run = async () => {
+      if (cancelled) return;
+      await fetchHostelPermissions();
+    };
+
+    run();
+    const interval = window.setInterval(run, 8000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [API_BASE, currentView, isLoggedIn, userRole]);
 
   if (!isLoggedIn) {
     if (currentView === "login") return <Login onLogin={handleLogin} />;
@@ -360,32 +485,28 @@ const App: React.FC = () => {
             />
           )}
 
-        {/* HOD VIEWS */}
-        {userRole === "hod" && currentView === "hod-dashboard" && (
+        {/* FA VIEWS */}
+        {userRole === "hod" && currentView === "fa-dashboard" && (
           <HODDashboard
             setView={setView}
+            eventsList={eventsList}
             odRequests={odRequests}
             externalProposals={externalProposals}
           />
         )}
-        {userRole === "hod" && currentView === "hod-od-approvals" && (
+        {userRole === "hod" && currentView === "fa-od-approvals" && (
           <HODODApprovals
             setView={setView}
             odRequests={odRequests}
             setOdRequests={setOdRequests}
           />
         )}
-        {userRole === "hod" && currentView === "hod-external-approvals" && (
-          <HODExternalApprovals
+        {userRole === "hod" && currentView === "fa-hostel-permission" && (
+          <HostelPermission
             setView={setView}
-            externalProposals={externalProposals}
-            setExternalProposals={setExternalProposals}
-            externalCertificates={externalCertificates}
-            setExternalCertificates={setExternalCertificates}
+            requests={hostelPermissionRequests}
+            onSendToHostelHead={sendHostelPermissionToHead}
           />
-        )}
-        {userRole === "hod" && currentView === "hod-summary" && (
-          <HODSummary setView={setView} clubSummaryData={clubSummaryData} />
         )}
 
         {/* ADMIN VIEWS */}

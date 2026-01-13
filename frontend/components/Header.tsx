@@ -153,10 +153,9 @@ const Header: React.FC<HeaderProps> = ({
   ];
 
   const hodNavItems = [
-    { name: "Dashboard", id: "hod-dashboard" },
-    { name: "OD Approvals", id: "hod-od-approvals" },
-    { name: "External Events Approval", id: "hod-external-approvals" },
-    { name: "Events Summary", id: "hod-summary" },
+    { name: "Dashboard", id: "fa-dashboard" },
+    { name: "OD Approvals", id: "fa-od-approvals" },
+    { name: "Hostel Permission", id: "fa-hostel-permission" },
   ];
 
   const navItems =
@@ -191,7 +190,7 @@ const Header: React.FC<HeaderProps> = ({
               userType === "admin"
                 ? "admin-dashboard"
                 : userType === "hod"
-                ? "hod-dashboard"
+                ? "fa-dashboard"
                 : "discover"
             )
           }
@@ -439,7 +438,7 @@ const Header: React.FC<HeaderProps> = ({
                       {userType === "admin"
                         ? "Tech Innovators Guild"
                         : userType === "hod"
-                        ? "HOD Access"
+                        ? "FA Access"
                         : "Student Portal"}
                     </p>
                   </div>

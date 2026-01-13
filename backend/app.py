@@ -12,10 +12,12 @@ try:
     from .routes.admin import admin_bp
     from .routes.student import student_bp
     from .routes.hod import hod_bp
+    from .routes.hostel import hostel_bp
 except ImportError:  # pragma: no cover
     from routes.admin import admin_bp
     from routes.student import student_bp
     from routes.hod import hod_bp
+    from routes.hostel import hostel_bp
 
 
 def create_app() -> Flask:
@@ -25,6 +27,7 @@ def create_app() -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(student_bp)
     app.register_blueprint(hod_bp)
+    app.register_blueprint(hostel_bp)
     return app
 
 
