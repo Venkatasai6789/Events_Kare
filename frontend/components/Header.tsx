@@ -56,6 +56,10 @@ const Header: React.FC<HeaderProps> = ({
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  const storedUser =
+    typeof window !== "undefined" ? localStorage.getItem("user") : null;
+  const studentName = storedUser ? (JSON.parse(storedUser) as any)?.name : null;
+
   // Handle scroll effect for glassmorphism
   useEffect(() => {
     const handleScroll = () => {
@@ -100,8 +104,8 @@ const Header: React.FC<HeaderProps> = ({
     try {
       const res = await fetch(
         `http://127.0.0.1:5000/api/student/notifications?student_id=${encodeURIComponent(
-          studentId
-        )}`
+          studentId,
+        )}`,
       );
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -109,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({
         return;
       }
       setNotifications(
-        Array.isArray(data?.notifications) ? data.notifications : []
+        Array.isArray(data?.notifications) ? data.notifications : [],
       );
     } catch {
       setNotifError("Failed to load notifications");
@@ -162,8 +166,8 @@ const Header: React.FC<HeaderProps> = ({
     userType === "admin"
       ? adminNavItems
       : userType === "hod"
-      ? hodNavItems
-      : studentNavItems;
+        ? hodNavItems
+        : studentNavItems;
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
@@ -190,8 +194,8 @@ const Header: React.FC<HeaderProps> = ({
               userType === "admin"
                 ? "admin-dashboard"
                 : userType === "hod"
-                ? "fa-dashboard"
-                : "discover"
+                  ? "fa-dashboard"
+                  : "discover",
             )
           }
         >
@@ -431,15 +435,15 @@ const Header: React.FC<HeaderProps> = ({
                       {userType === "admin"
                         ? "Club Admin Access"
                         : userType === "hod"
-                        ? "Department Head"
-                        : "Alex Thompson"}
+                          ? "Department Head"
+                          : studentName || ""}
                     </p>
                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                       {userType === "admin"
                         ? "Tech Innovators Guild"
                         : userType === "hod"
-                        ? "FA Access"
-                        : "Student Portal"}
+                          ? "FA Access"
+                          : "Student Portal"}
                     </p>
                   </div>
 

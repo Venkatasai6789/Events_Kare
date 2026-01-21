@@ -13,17 +13,20 @@ try:
     from .routes.student import student_bp
     from .routes.hod import hod_bp
     from .routes.hostel import hostel_bp
+    from .routes.auth import auth_bp
 except ImportError:  # pragma: no cover
     from routes.admin import admin_bp
     from routes.student import student_bp
     from routes.hod import hod_bp
     from routes.hostel import hostel_bp
+    from routes.auth import auth_bp
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
     CORS(app)
     app.register_blueprint(api)
+    app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(student_bp)
     app.register_blueprint(hod_bp)

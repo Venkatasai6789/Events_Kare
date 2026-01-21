@@ -17,10 +17,25 @@ def _get_mongo_uri() -> str:
     return mongo_uri
 
 
+def _get_mongo_client_options() -> dict:
+    # Fail fast by default; override via env if needed.
+    def _int_env(name: str, default: int) -> int:
+        value = os.getenv(name)
+        if value is None or value.strip() == "":
+            return default
+        return int(value)
+
+    return {
+        "connectTimeoutMS": _int_env("MONGO_CONNECT_TIMEOUT_MS", 5_000),
+        "serverSelectionTimeoutMS": _int_env("MONGO_SERVER_SELECTION_TIMEOUT_MS", 5_000),
+        "socketTimeoutMS": _int_env("MONGO_SOCKET_TIMEOUT_MS", 10_000),
+    }
+
+
 def get_client() -> MongoClient:
     global _client
     if _client is None:
-        _client = MongoClient(_get_mongo_uri())
+        _client = MongoClient(_get_mongo_uri(), **_get_mongo_client_options())
     return _client
 
 
