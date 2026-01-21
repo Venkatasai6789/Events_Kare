@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from flask import Blueprint, jsonify
-from flask import request
+from functools import wraps
+
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
 
 from datetime import datetime, timezone
 
@@ -12,6 +14,18 @@ except ImportError:  # pragma: no cover
 
 
 student_bp = Blueprint("student", __name__, url_prefix="/api/student")
+
+
+def student_required(fn):
+    @wraps(fn)
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        claims = get_jwt() or {}
+        if claims.get("role") != "student":
+            return jsonify({"error": "Unauthorized"}), 401
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 def _require_str(payload: dict, key: str) -> str:
@@ -51,8 +65,10 @@ def _serialize_hostel_permission(doc: dict) -> dict:
 
 
 @student_bp.get("/events")
+@student_required
 def list_events():
     try:
+        _user_id = get_jwt_identity()
         db = get_db()
         cursor = (
             db.events.find({"status": "Published"}, {"_id": 0})
@@ -64,8 +80,10 @@ def list_events():
 
 
 @student_bp.get("/vacancies")
+@student_required
 def list_vacancies():
     try:
+        _user_id = get_jwt_identity()
         db = get_db()
         club_name = request.args.get("club_name")
 
@@ -80,6 +98,7 @@ def list_vacancies():
 
 
 @student_bp.get("/notifications")
+@student_required
 def list_notifications():
     """Fetch notifications for a student.
 
@@ -90,6 +109,7 @@ def list_notifications():
     """
 
     try:
+        _user_id = get_jwt_identity()
         db = get_db()
 
         student_id = request.args.get("student_id")
@@ -113,6 +133,7 @@ def list_notifications():
 
 
 @student_bp.get("/certificates")
+@student_required
 def list_certificates():
     """Fetch issued certificates for a student.
 
@@ -123,6 +144,7 @@ def list_certificates():
     """
 
     try:
+        _user_id = get_jwt_identity()
         db = get_db()
 
         student_id = request.args.get("student_id")
@@ -151,6 +173,7 @@ def list_certificates():
 
 
 @student_bp.post("/hostel-permissions")
+@student_required
 def create_hostel_permission_request():
     """Create a hostel permission request (student-submitted).
 
@@ -180,6 +203,7 @@ def create_hostel_permission_request():
     payload = request.get_json(silent=True) or {}
 
     try:
+        _user_id = get_jwt_identity()
         student_id = _require_str(payload, "student_id")
         student_name = _require_str(payload, "student_name")
         section = _require_str(payload, "section")
@@ -234,6 +258,7 @@ def create_hostel_permission_request():
 
 
 @student_bp.get("/hostel-permissions")
+@student_required
 def list_hostel_permission_requests():
     """List hostel permission requests for a student.
 
@@ -242,6 +267,7 @@ def list_hostel_permission_requests():
     """
 
     try:
+        _user_id = get_jwt_identity()
         db = get_db()
         _ensure_hostel_permissions_indexes(db)
 

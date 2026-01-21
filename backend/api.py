@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import create_access_token
 from werkzeug.security import check_password_hash
 
 try:
-	from .db import get_db, ping
+	from .db import get_users_collection, ping
 except ImportError:  # pragma: no cover
-	from db import get_db, ping
+	from db import get_users_collection, ping
 
 api = Blueprint("api", __name__)
 
@@ -65,8 +66,8 @@ def login():
 	user_id = user_id.strip()
 
 	try:
-		db = get_db()
-		user = db.users.find_one({"user_id": user_id}, {"_id": 0})
+		users = get_users_collection()
+		user = users.find_one({"user_id": user_id}, {"_id": 0})
 		if not user:
 			return jsonify({"error": "Invalid credentials"}), 401
 
@@ -77,9 +78,16 @@ def login():
 		if not check_password_hash(stored_hash, password):
 			return jsonify({"error": "Invalid credentials"}), 401
 
+		access_token = create_access_token(
+			identity=user.get("user_id"),
+			additional_claims={"role": user.get("role")},
+		)
+
 		return (
 			jsonify(
 				{
+					"message": "Login successful",
+					"access_token": access_token,
 					"user_id": user.get("user_id"),
 					"name": user.get("name"),
 					"role": user.get("role"),

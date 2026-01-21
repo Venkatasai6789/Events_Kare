@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { Award } from "lucide-react";
 
 const AdminCertificates: React.FC = () => {
+  const getAdminAuthHeaders = () => {
+    const token = localStorage.getItem("admin_access_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const [studentId, setStudentId] = useState("");
   const [studentName, setStudentName] = useState("");
   const [eventId, setEventId] = useState("");
@@ -15,7 +20,10 @@ const AdminCertificates: React.FC = () => {
     try {
       const res = await fetch("http://127.0.0.1:5000/api/admin/certificates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAdminAuthHeaders(),
+        },
         body: JSON.stringify({
           student_id: studentId,
           student_name: studentName,

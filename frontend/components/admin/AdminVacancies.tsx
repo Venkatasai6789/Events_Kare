@@ -10,6 +10,11 @@ interface AdminVacanciesProps {
 const AdminVacancies: React.FC<AdminVacanciesProps> = ({ applications }) => {
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
 
+  const getAdminAuthHeaders = () => {
+    const token = localStorage.getItem("admin_access_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const clubOptions = useMemo(() => CAMPUS_CLUBS.map((c) => c.name), []);
 
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
@@ -30,7 +35,11 @@ const AdminVacancies: React.FC<AdminVacanciesProps> = ({ applications }) => {
     setLoadingVacancies(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/vacancies`);
+      const res = await fetch(`${API_BASE}/api/admin/vacancies`, {
+        headers: {
+          ...getAdminAuthHeaders(),
+        },
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to load vacancies");
       setVacancies(Array.isArray(data?.vacancies) ? data.vacancies : []);
@@ -64,7 +73,10 @@ const AdminVacancies: React.FC<AdminVacanciesProps> = ({ applications }) => {
 
       const res = await fetch(`${API_BASE}/api/admin/vacancies`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAdminAuthHeaders(),
+        },
         body: JSON.stringify(payload),
       });
       const data = await res.json();

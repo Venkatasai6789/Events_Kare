@@ -16,7 +16,7 @@ interface HeaderProps {
   setView: (view: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  userType: "student" | "admin" | "hod";
+  userType: "student" | "admin" | "hod" | "club_admin";
   onLogout: () => void;
   showLoginButton?: boolean;
   onLogin?: () => void;
@@ -102,10 +102,17 @@ const Header: React.FC<HeaderProps> = ({
     setIsNotifLoading(true);
     setNotifError(null);
     try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("access_token")
+          : null;
       const res = await fetch(
         `http://127.0.0.1:5000/api/student/notifications?student_id=${encodeURIComponent(
           studentId,
         )}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        },
       );
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -163,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({
   ];
 
   const navItems =
-    userType === "admin"
+    userType === "admin" || userType === "club_admin"
       ? adminNavItems
       : userType === "hod"
         ? hodNavItems

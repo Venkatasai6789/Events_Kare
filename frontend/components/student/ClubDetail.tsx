@@ -17,10 +17,17 @@ const ClubDetail: React.FC<ClubDetailProps> = ({ club, onBack }) => {
     const loadVacancies = async () => {
       setLoadingVacancies(true);
       try {
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("access_token")
+            : null;
         const res = await fetch(
           `${API_BASE}/api/student/vacancies?club_name=${encodeURIComponent(
-            club.name
-          )}`
+            club.name,
+          )}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          },
         );
         const data = await res.json();
         if (!res.ok) {

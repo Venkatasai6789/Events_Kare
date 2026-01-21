@@ -2,12 +2,13 @@ import React from "react";
 import { Mail, Lock, LogIn, Shield } from "lucide-react";
 
 interface LoginProps {
-  onLogin: (role: "student" | "admin" | "hod") => void;
+  onLogin: (role: "student" | "admin" | "hod" | "club_admin") => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const LOGIN_URL = "http://127.0.0.1:5000/api/login";
-  const [role, setRole] = React.useState<"student" | "admin" | "hod">(
+  const STUDENT_LOGIN_URL = "http://127.0.0.1:5000/api/login";
+  const CLUB_ADMIN_LOGIN_URL = "http://127.0.0.1:5000/api/admin/login";
+  const [role, setRole] = React.useState<"student" | "club_admin" | "hod">(
     "student",
   );
   const [loginId, setLoginId] = React.useState("");
@@ -29,33 +30,57 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     if (role === "hod" && !validateHodCredentials()) return;
 
-    if (role !== "student") {
+    if (role !== "student" && role !== "club_admin") {
       setError("Invalid credentials");
       return;
     }
 
     (async () => {
       try {
-        const res = await fetch(LOGIN_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: loginId,
-            password,
-          }),
-        });
+        const isClubAdmin = role === "club_admin";
+        const res = await fetch(
+          isClubAdmin ? CLUB_ADMIN_LOGIN_URL : STUDENT_LOGIN_URL,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              isClubAdmin
+                ? {
+                    admin_id: loginId,
+                    password,
+                  }
+                : {
+                    user_id: loginId,
+                    password,
+                  },
+            ),
+          },
+        );
 
         if (!res.ok) {
-          setError("Invalid credentials");
+          setError(
+            isClubAdmin ? "Invalid admin credentials" : "Invalid credentials",
+          );
           return;
         }
 
-        const user = await res.json();
+        const payload = await res.json();
+        const user = isClubAdmin ? { ...payload, role: "club_admin" } : payload;
         localStorage.setItem("user", JSON.stringify(user));
+        if (user?.access_token) {
+          localStorage.setItem(
+            isClubAdmin ? "admin_access_token" : "access_token",
+            String(user.access_token),
+          );
+        }
         setError(null);
-        onLogin("student");
+        onLogin(isClubAdmin ? "club_admin" : "student");
       } catch {
-        setError("Invalid credentials");
+        setError(
+          role === "club_admin"
+            ? "Invalid admin credentials"
+            : "Invalid credentials",
+        );
       }
     })();
   };
@@ -97,29 +122,29 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </button>
             <button
               onClick={() => {
-                setRole("admin");
+                setRole("club_admin");
                 setError(null);
               }}
               className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
-                role === "admin"
+                role === "club_admin"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-500"
               }`}
             >
-              Admin
+              Club Admin
             </button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                {role === "student" ? "Registration Number" : "Email"}
+                {role === "student" ? "Registration Number" : "User ID"}
               </label>
               <div className="relative">
                 <input
-                  type={role === "student" ? "text" : "email"}
+                  type="text"
                   className="w-full p-4 pl-12 bg-slate-50 border rounded-xl"
                   placeholder={
-                    role === "student" ? "21CSE001" : "name@university.edu"
+                    role === "student" ? "21CSE001" : "CLUBADMIN_TIG"
                   }
                   value={loginId}
                   onChange={(e) => {
@@ -168,7 +193,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             >
               <LogIn className="w-5 h-5" />
               Sign in as{" "}
-              {role === "admin" ? "Admin" : role === "hod" ? "FA" : "Student"}
+              {role === "club_admin"
+                ? "Admin"
+                : role === "hod"
+                  ? "FA"
+                  : "Student"}
             </button>
 
             <div className="flex justify-center pt-6">

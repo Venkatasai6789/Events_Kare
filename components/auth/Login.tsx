@@ -2,12 +2,13 @@ import React from "react";
 import { Mail, Lock, LogIn, Shield } from "lucide-react";
 
 interface LoginProps {
-  onLogin: (role: "student" | "admin" | "hod") => void;
+  onLogin: (role: "student" | "admin" | "hod" | "club_admin") => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const LOGIN_URL = "http://127.0.0.1:5000/api/login";
-  const [role, setRole] = React.useState<"student" | "admin" | "hod">(
+  const STUDENT_LOGIN_URL = "http://127.0.0.1:5000/api/login";
+  const CLUB_ADMIN_LOGIN_URL = "http://127.0.0.1:5000/api/admin/login";
+  const [role, setRole] = React.useState<"student" | "club_admin" | "hod">(
     "student",
   );
   const [loginId, setLoginId] = React.useState("");
@@ -27,31 +28,45 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (role !== "student") {
+    if (role !== "student" && role !== "club_admin") {
       setError("Invalid credentials");
       return;
     }
 
     (async () => {
       try {
-        const res = await fetch(LOGIN_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: loginId,
-            password,
-          }),
-        });
+        const isClubAdmin = role === "club_admin";
+        const res = await fetch(
+          isClubAdmin ? CLUB_ADMIN_LOGIN_URL : STUDENT_LOGIN_URL,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              isClubAdmin
+                ? {
+                    admin_id: loginId,
+                    password,
+                  }
+                : {
+                    user_id: loginId,
+                    password,
+                  },
+            ),
+          },
+        );
 
         if (!res.ok) {
           setError("Invalid credentials");
           return;
         }
 
-        const user = await res.json();
+        const payload = await res.json();
+        const user = isClubAdmin ? { ...payload, role: "club_admin" } : payload;
         localStorage.setItem("user", JSON.stringify(user));
+        if (user?.access_token)
+          localStorage.setItem("access_token", String(user.access_token));
         setError(null);
-        onLogin("student");
+        onLogin(isClubAdmin ? "club_admin" : "student");
       } catch {
         setError("Invalid credentials");
       }
@@ -171,7 +186,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             >
               <LogIn className="w-5 h-5" />
               Sign in as{" "}
-              {role === "admin" ? "Admin" : role === "hod" ? "FA" : "Student"}
+              {role === "club_admin"
+                ? "Admin"
+                : role === "admin"
+                  ? "Admin"
+                  : role === "hod"
+                    ? "FA"
+                    : "Student"}
             </button>
 
             <div className="flex justify-center pt-6">

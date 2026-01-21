@@ -3,7 +3,7 @@ import sys
 from pymongo.errors import ConfigurationError, ServerSelectionTimeoutError
 from werkzeug.security import generate_password_hash
 
-from db import get_db, ping
+from db import get_users_collection, ping
 
 students = [
     {
@@ -62,8 +62,8 @@ def main() -> int:
         )
         return 1
 
-    db = get_db()
-    db.users.insert_many(students)
+    users = get_users_collection()
+    users.insert_many(students)
     print("✅ 5 students added successfully")
     return 0
 

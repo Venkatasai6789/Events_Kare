@@ -14,6 +14,11 @@ type AttendanceRecord = {
 
 const API_BASE = "http://127.0.0.1:5000";
 
+const getAdminAuthHeaders = () => {
+  const token = localStorage.getItem("admin_access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 const AdminAttendance: React.FC = () => {
   const [eventId, setEventId] = useState<string>("");
   const [attendances, setAttendances] = useState<AttendanceRecord[]>([]);
@@ -43,8 +48,13 @@ const AdminAttendance: React.FC = () => {
     try {
       const res = await fetch(
         `${API_BASE}/api/admin/attendance?event_id=${encodeURIComponent(
-          trimmed
-        )}`
+          trimmed,
+        )}`,
+        {
+          headers: {
+            ...getAdminAuthHeaders(),
+          },
+        },
       );
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -68,9 +78,14 @@ const AdminAttendance: React.FC = () => {
       try {
         const res = await fetch(
           `${API_BASE}/api/admin/attendance/${encodeURIComponent(
-            attendanceId
+            attendanceId,
           )}/${action}`,
-          { method: "POST" }
+          {
+            method: "POST",
+            headers: {
+              ...getAdminAuthHeaders(),
+            },
+          },
         );
         const data = await res.json().catch(() => null);
         if (!res.ok) {
@@ -87,8 +102,8 @@ const AdminAttendance: React.FC = () => {
 
         setAttendances((prev) =>
           prev.map((r) =>
-            r.attendance_id === updated.attendance_id ? updated : r
-          )
+            r.attendance_id === updated.attendance_id ? updated : r,
+          ),
         );
       } catch (e: any) {
         setError(e?.message || `Failed to ${action} attendance`);
@@ -96,7 +111,7 @@ const AdminAttendance: React.FC = () => {
         setIsUpdating(null);
       }
     },
-    [loadAttendances]
+    [loadAttendances],
   );
 
   return (
@@ -188,7 +203,7 @@ const AdminAttendance: React.FC = () => {
                       <div className="col-span-2">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusPillClass(
-                            (r.status || "Pending") as AttendanceStatus
+                            (r.status || "Pending") as AttendanceStatus,
                           )}`}
                         >
                           {r.status || "Pending"}

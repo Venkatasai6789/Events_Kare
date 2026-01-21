@@ -3,7 +3,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, g, jsonify, request
+
+from flask_jwt_extended import create_access_token, get_jwt_identity, verify_jwt_in_request
+from werkzeug.security import check_password_hash
 
 try:
     from bson import ObjectId
@@ -11,12 +14,96 @@ except Exception:  # pragma: no cover
     ObjectId = None
 
 try:
-    from ..db import get_db
+    from ..db import get_club_admins_collection, get_db
 except ImportError:  # pragma: no cover
-    from db import get_db
+    from db import get_club_admins_collection, get_db
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
+
+
+@admin_bp.before_request
+def _admin_jwt_guard():
+    """Require JWT for all /api/admin/* routes except login.
+
+    - Missing/invalid/expired/revoked token => handled by JWT callbacks (401)
+    - Stores extracted identity on `flask.g.admin_identity`
+    """
+
+    # Allow CORS preflight to pass through.
+    if request.method == "OPTIONS":
+        return None
+
+    # Do not protect the login endpoint.
+    if request.path.rstrip("/") == "/api/admin/login":
+        return None
+
+    verify_jwt_in_request()
+    g.admin_identity = get_jwt_identity()
+    return None
+
+
+@admin_bp.post("/login")
+def club_admin_login():
+    """Authenticate a club admin using credentials stored in `club_admins`.
+
+    Expected JSON body:
+    {
+        "admin_id": "...",
+        "password": "..."
+    }
+
+    Returns:
+    {
+        "message": "Login successful",
+        "access_token": "...",
+        "admin_id": "...",
+        "name": "...",
+        "club_name": "..."
+    }
+    """
+
+    if not request.is_json:
+        return jsonify({"error": "Request body must be JSON"}), 400
+
+    payload = request.get_json(silent=True) or {}
+
+    try:
+        admin_id = _require_str(payload, "admin_id")
+        password = _require_str(payload, "password")
+
+        admins = get_club_admins_collection()
+        admin = admins.find_one({"admin_id": admin_id}, {"_id": 0})
+        if not admin:
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        stored_hash = admin.get("password")
+        if not (isinstance(stored_hash, str) and stored_hash):
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        if not check_password_hash(stored_hash, password):
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        access_token = create_access_token(
+            identity={"kind": "club_admin", "admin_id": admin_id}
+        )
+
+        return (
+            jsonify(
+                {
+                    "message": "Login successful",
+                    "access_token": access_token,
+                    "admin_id": admin_id,
+                    "name": admin.get("name"),
+                    "club_name": admin.get("club_name"),
+                }
+            ),
+            200,
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
 
 
 def _insert_notification(

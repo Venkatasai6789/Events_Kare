@@ -35,9 +35,9 @@ import AdminVacancies from "./components/admin/AdminVacancies";
 const App: React.FC = () => {
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<"student" | "admin" | "hod">(
-    "student"
-  );
+  const [userRole, setUserRole] = useState<
+    "student" | "admin" | "hod" | "club_admin"
+  >("student");
   const [currentView, setView] = useState("events");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
@@ -267,15 +267,15 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleLogin = (role: "student" | "admin" | "hod") => {
+  const handleLogin = (role: "student" | "admin" | "hod" | "club_admin") => {
     setUserRole(role);
     setIsLoggedIn(true);
     setView(
-      role === "admin"
+      role === "admin" || role === "club_admin"
         ? "admin-dashboard"
         : role === "hod"
-        ? "fa-dashboard"
-        : "discover"
+          ? "fa-dashboard"
+          : "discover",
     );
   };
 
@@ -284,6 +284,12 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    try {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+    } catch {
+      // ignore storage errors
+    }
     setIsLoggedIn(false);
     setUserRole("student");
     setView("discover");
@@ -296,9 +302,9 @@ const App: React.FC = () => {
       try {
         const res = await fetch(
           `${API_BASE}/api/fa/hostel-permissions/${encodeURIComponent(
-            requestId
+            requestId,
           )}/send`,
-          { method: "POST" }
+          { method: "POST" },
         );
 
         if (!res.ok) {
@@ -337,7 +343,7 @@ const App: React.FC = () => {
           hostelName: d.hostel_name,
           status: d.status,
           sentToHostelHead: !!d.requested_by_fa,
-        }))
+        })),
       );
     } catch {
       // Keep existing in-memory state if backend isn't reachable.
@@ -484,29 +490,33 @@ const App: React.FC = () => {
         )}
 
         {/* ADMIN VIEWS */}
-        {userRole === "admin" && currentView === "admin-dashboard" && (
-          <AdminDashboard
-            setView={setView}
-            eventsList={eventsList}
-            setSelectedEvent={setSelectedEvent}
-            activityFilter={activityFilter}
-            setActivityFilter={setActivityFilter}
-            showActivityMenu={showActivityMenu}
-            setShowActivityMenu={setShowActivityMenu}
-          />
-        )}
-        {userRole === "admin" && currentView === "admin-attendance" && (
-          <AdminAttendance />
-        )}
-        {userRole === "admin" && currentView === "admin-certificates" && (
-          <AdminCertificates />
-        )}
-        {userRole === "admin" && currentView === "admin-events" && (
-          <AdminEvents eventsList={eventsList} setEventsList={setEventsList} />
-        )}
-        {userRole === "admin" && currentView === "admin-vacancies" && (
-          <AdminVacancies applications={applications} />
-        )}
+        {(userRole === "admin" || userRole === "club_admin") &&
+          currentView === "admin-dashboard" && (
+            <AdminDashboard
+              setView={setView}
+              eventsList={eventsList}
+              setSelectedEvent={setSelectedEvent}
+              activityFilter={activityFilter}
+              setActivityFilter={setActivityFilter}
+              showActivityMenu={showActivityMenu}
+              setShowActivityMenu={setShowActivityMenu}
+            />
+          )}
+        {(userRole === "admin" || userRole === "club_admin") &&
+          currentView === "admin-attendance" && <AdminAttendance />}
+        {(userRole === "admin" || userRole === "club_admin") &&
+          currentView === "admin-certificates" && <AdminCertificates />}
+        {(userRole === "admin" || userRole === "club_admin") &&
+          currentView === "admin-events" && (
+            <AdminEvents
+              eventsList={eventsList}
+              setEventsList={setEventsList}
+            />
+          )}
+        {(userRole === "admin" || userRole === "club_admin") &&
+          currentView === "admin-vacancies" && (
+            <AdminVacancies applications={applications} />
+          )}
       </main>
 
       {/* Modals & Overlays */}

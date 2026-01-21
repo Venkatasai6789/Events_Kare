@@ -26,7 +26,13 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("http://127.0.0.1:5000/api/student/events");
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("access_token")
+            : null;
+        const res = await fetch("http://127.0.0.1:5000/api/student/events", {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         const data = await res.json();
         if (!res.ok) return;
 
@@ -37,14 +43,14 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
             e.event_type === "Technical"
               ? "Technical"
               : e.event_type === "Non-Technical"
-              ? "Non-Technical"
-              : undefined;
+                ? "Non-Technical"
+                : undefined;
           const eventCategory =
             e.category === "Internal"
               ? "Internal"
               : e.category === "External"
-              ? "External"
-              : undefined;
+                ? "External"
+                : undefined;
 
           return {
             id:
@@ -106,7 +112,7 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
       filtered = filtered.filter(
         (e) =>
           e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.category.toLowerCase().includes(searchQuery.toLowerCase())
+          e.category.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -152,9 +158,9 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
             "Management Fest",
             "Sports Event",
           ].includes(e.category) &&
-            e.type === "External")
+            e.type === "External"),
       ),
-    [filteredEvents]
+    [filteredEvents],
   );
 
   const nonTechnicalEvents = useMemo(
@@ -167,9 +173,9 @@ const StudentEvents: React.FC<StudentEventsProps> = ({
           "Cultural Fest",
           "Management Fest",
           "Sports Event",
-        ].includes(e.category)
+        ].includes(e.category),
       ),
-    [filteredEvents]
+    [filteredEvents],
   );
 
   return (
