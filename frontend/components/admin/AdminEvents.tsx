@@ -14,6 +14,11 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
   setEventsList,
   onEventClick,
 }) => {
+  const getAdminAuthHeaders = () => {
+    const token = localStorage.getItem("admin_access_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const [newEvent, setNewEvent] = useState({
     clubName: "",
     eventName: "",
@@ -65,7 +70,10 @@ const AdminEvents: React.FC<AdminEventsProps> = ({
     try {
       const res = await fetch("http://127.0.0.1:5000/api/admin/events", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAdminAuthHeaders(),
+        },
         body: JSON.stringify({
           club_name: newEvent.clubName,
           event_name: newEvent.eventName,

@@ -15,14 +15,20 @@ const StudentClubs: React.FC<StudentClubsProps> = ({ onClubClick }) => {
 
   const clubNameSet = useMemo(
     () => new Set(CAMPUS_CLUBS.map((c) => c.name)),
-    []
+    [],
   );
 
   useEffect(() => {
     const loadCounts = async () => {
       setLoadingCounts(true);
       try {
-        const res = await fetch(`${API_BASE}/api/student/vacancies`);
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("access_token")
+            : null;
+        const res = await fetch(`${API_BASE}/api/student/vacancies`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         const data = await res.json();
         if (!res.ok) return;
 
@@ -40,7 +46,7 @@ const StudentClubs: React.FC<StudentClubsProps> = ({ onClubClick }) => {
           prev.map((c) => ({
             ...c,
             openPositions: countsByClub.get(c.name) ?? c.openPositions,
-          }))
+          })),
         );
       } finally {
         setLoadingCounts(false);

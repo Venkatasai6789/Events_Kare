@@ -34,15 +34,22 @@ const StudentInbox: React.FC<StudentInboxProps> = ({
 
   const fetchCertificates = async () => {
     try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("access_token")
+          : null;
       const res = await fetch(
         `http://127.0.0.1:5000/api/student/certificates?student_id=${encodeURIComponent(
-          STUDENT_PROFILE.registerNumber
-        )}`
+          STUDENT_PROFILE.registerNumber,
+        )}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        },
       );
       const data = await res.json().catch(() => null);
       if (!res.ok) return;
       setIssuedCertificates(
-        Array.isArray(data?.certificates) ? data.certificates : []
+        Array.isArray(data?.certificates) ? data.certificates : [],
       );
     } catch {
       // no-op: keep existing UI
@@ -87,7 +94,7 @@ const StudentInbox: React.FC<StudentInboxProps> = ({
     return allAchievements.filter((a) =>
       filter === "Career"
         ? a.category === "Career"
-        : a.category === filter || a.category === "General"
+        : a.category === filter || a.category === "General",
     );
   }, [activeCertificateFilter, allAchievements]);
 

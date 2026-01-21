@@ -4,9 +4,9 @@ from flask import Blueprint, jsonify, request
 from werkzeug.security import check_password_hash
 
 try:
-    from ..db import get_db
+    from ..db import get_users_collection
 except ImportError:  # pragma: no cover
-    from db import get_db
+    from db import get_users_collection
 
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
@@ -44,9 +44,9 @@ def login():
         if role not in {"student", "admin", "hod"}:
             return jsonify({"error": "Invalid role"}), 400
 
-        db = get_db()
+        users = get_users_collection()
 
-        user = db.users.find_one(
+        user = users.find_one(
             {
                 "role": role,
                 "$or": [

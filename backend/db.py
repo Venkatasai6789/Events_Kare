@@ -4,6 +4,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.database import Database
+from pymongo.collection import Collection
 
 load_dotenv()
 
@@ -42,6 +43,29 @@ def get_client() -> MongoClient:
 def get_db() -> Database:
     db_name = os.getenv("MONGO_DB_NAME", "campus_connect")
     return get_client()[db_name]
+
+
+def get_users_collection() -> Collection:
+    """Return the collection that stores all authenticated user accounts.
+
+    The project originally used `users`. If you renamed it to `students`, keep
+    this function as the single source of truth.
+
+    Override via env var USERS_COLLECTION if needed.
+    """
+
+    collection_name = os.getenv("USERS_COLLECTION", "students").strip() or "students"
+    return get_db()[collection_name]
+
+
+def get_club_admins_collection() -> Collection:
+    """Return the dedicated club admins collection.
+
+    Per current design, club admin credentials are stored independently from
+    student credentials.
+    """
+
+    return get_db()["club_admins"]
 
 
 def ping() -> dict:
