@@ -6,8 +6,9 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const LOGIN_URL = "http://127.0.0.1:5000/api/login";
   const [role, setRole] = React.useState<"student" | "admin" | "hod">(
-    "student"
+    "student",
   );
   const [loginId, setLoginId] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -28,8 +29,35 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     if (role === "hod" && !validateHodCredentials()) return;
 
-    setError(null);
-    onLogin(role);
+    if (role !== "student") {
+      setError("Invalid credentials");
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch(LOGIN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: loginId,
+            password,
+          }),
+        });
+
+        if (!res.ok) {
+          setError("Invalid credentials");
+          return;
+        }
+
+        const user = await res.json();
+        localStorage.setItem("user", JSON.stringify(user));
+        setError(null);
+        onLogin("student");
+      } catch {
+        setError("Invalid credentials");
+      }
+    })();
   };
 
   return (
@@ -84,13 +112,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                {role === "hod" ? "FA ID / Email" : "Email"}
+                {role === "student" ? "Registration Number" : "Email"}
               </label>
               <div className="relative">
                 <input
-                  type={role === "hod" ? "text" : "email"}
+                  type={role === "student" ? "text" : "email"}
                   className="w-full p-4 pl-12 bg-slate-50 border rounded-xl"
-                  placeholder="name@university.edu"
+                  placeholder={
+                    role === "student" ? "21CSE001" : "name@university.edu"
+                  }
                   value={loginId}
                   onChange={(e) => {
                     setLoginId(e.target.value);
@@ -128,7 +158,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   Remember me
                 </span>
               </label>
-              {role === "hod" && error ? (
+              {error ? (
                 <span className="text-sm font-bold text-rose-600">{error}</span>
               ) : null}
             </div>
@@ -145,8 +175,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setRole("hod");
-                  if (validateHodCredentials()) onLogin("hod");
+                  setError("Invalid credentials");
                 }}
                 className="flex items-center gap-2 px-6 py-2.5 border border-slate-200 rounded-full text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all hover:border-slate-300 active:scale-95 shadow-sm"
               >

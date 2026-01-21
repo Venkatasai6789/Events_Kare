@@ -10,20 +10,29 @@ import {
   CheckCircle2,
   Clock,
 } from "lucide-react";
-import { CREDIT_GROUPS, STUDENT_PROFILE } from "../../constants";
+import { CREDIT_GROUPS } from "../../constants";
 
 interface StudentDashboardProps {
   setView: (view: string) => void;
 }
 
 const StudentDashboard: React.FC<StudentDashboardProps> = ({ setView }) => {
+  const storedUser =
+    typeof window !== "undefined" ? localStorage.getItem("user") : null;
+  const user = storedUser ? (JSON.parse(storedUser) as any) : ({} as any);
+
+  const studentName = (user?.name as string) || "";
+  const registerNumber = (user?.user_id as string) || "";
+  const department = (user?.department as string) || "";
+  const section = (user?.section as string) || "";
+
   return (
     <div className="animate-in fade-in duration-700 pb-20">
       {/* New Welcome Header Section */}
       <div className="flex flex-col xl:flex-row gap-8 items-start xl:items-center justify-between mb-8">
         <div className="space-y-2 max-w-xl">
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-            Welcome, <span className="text-blue-600">Alex</span> 👋
+            Welcome, <span className="text-blue-600">{studentName}</span> 👋
           </h1>
           <p className="text-slate-500 font-medium text-lg leading-relaxed">
             Track your activity credits, registered events, upcoming, ongoing
@@ -79,7 +88,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ setView }) => {
                   Full Name
                 </p>
                 <p className="text-2xl font-black tracking-tight">
-                  {STUDENT_PROFILE.name}
+                  {studentName}
                 </p>
               </div>
               <div>
@@ -88,7 +97,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ setView }) => {
                 </p>
                 <div className="flex items-center gap-2">
                   <p className="text-xl font-black tracking-wider font-mono">
-                    {STUDENT_PROFILE.registerNumber}
+                    {registerNumber}
                   </p>
                 </div>
               </div>
@@ -97,17 +106,13 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ setView }) => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                     Dept
                   </p>
-                  <p className="font-bold text-sm">
-                    {STUDENT_PROFILE.department}
-                  </p>
+                  <p className="font-bold text-sm">{department}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                    Year
+                    Section
                   </p>
-                  <p className="font-bold text-sm">
-                    {STUDENT_PROFILE.academicYear}
-                  </p>
+                  <p className="font-bold text-sm">{section}</p>
                 </div>
               </div>
             </div>
@@ -128,7 +133,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ setView }) => {
             </p>
             <div className="bg-white p-2 border-2 border-slate-100 rounded-2xl mb-8 shadow-inner">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${STUDENT_PROFILE.registerNumber}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${registerNumber}`}
                 className="w-48 h-48 mix-blend-multiply opacity-90"
               />
             </div>
