@@ -8,6 +8,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const STUDENT_LOGIN_URL = "http://127.0.0.1:5000/api/login";
   const CLUB_ADMIN_LOGIN_URL = "http://127.0.0.1:5000/api/admin/login";
+  const FA_LOGIN_URL = "http://127.0.0.1:5000/api/fa/login";
   const [role, setRole] = React.useState<"student" | "club_admin" | "hod">(
     "student",
   );
@@ -18,7 +19,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const validateHodCredentials = () => {
     const isValid = loginId.trim().length > 0 && password.trim().length > 0;
     if (!isValid) {
-      setError("Please enter valid credentials");
+      setError("Invalid FA credentials");
       return false;
     }
     setError(null);
@@ -28,7 +29,51 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (role === "hod" && !validateHodCredentials()) return;
+    if (role === "hod") {
+      if (!validateHodCredentials()) return;
+
+      (async () => {
+        try {
+          const res = await fetch(FA_LOGIN_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fa_id: loginId,
+              password,
+            }),
+          });
+
+          if (!res.ok) {
+            setError("Invalid FA credentials");
+            return;
+          }
+
+          const payload = await res.json();
+          if (payload?.access_token) {
+            localStorage.setItem(
+              "fa_access_token",
+              String(payload.access_token),
+            );
+          }
+          localStorage.setItem(
+            "fa_user",
+            JSON.stringify({
+              fa_id: payload?.fa_id,
+              name: payload?.name,
+              department: payload?.department,
+              section: payload?.section,
+            }),
+          );
+
+          setError(null);
+          onLogin("hod");
+        } catch {
+          setError("Invalid FA credentials");
+        }
+      })();
+
+      return;
+    }
 
     if (role !== "student" && role !== "club_admin") {
       setError("Invalid credentials");
@@ -204,7 +249,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setError("Invalid credentials");
+                  setRole("hod");
+                  setError(null);
                 }}
                 className="flex items-center gap-2 px-6 py-2.5 border border-slate-200 rounded-full text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all hover:border-slate-300 active:scale-95 shadow-sm"
               >
