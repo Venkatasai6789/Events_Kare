@@ -297,13 +297,21 @@ const App: React.FC = () => {
     try {
       localStorage.removeItem("access_token");
       localStorage.removeItem("admin_access_token");
+      localStorage.removeItem("fa_access_token");
+      localStorage.removeItem("fa_user");
       localStorage.removeItem("user");
     } catch {
       // ignore storage errors
     }
     setIsLoggedIn(false);
     setUserRole("student");
-    setView(previousRole === "club_admin" ? "login" : "discover");
+    setView(
+      previousRole === "hod"
+        ? "login"
+        : previousRole === "club_admin"
+          ? "login"
+          : "discover",
+    );
     setSearchQuery("");
     setShowLogoutConfirm(false);
   };
@@ -311,11 +319,17 @@ const App: React.FC = () => {
   const sendHostelPermissionToHead = (requestId: string) => {
     (async () => {
       try {
+        const faToken = localStorage.getItem("fa_access_token") || "";
         const res = await fetch(
           `${API_BASE}/api/fa/hostel-permissions/${encodeURIComponent(
             requestId,
           )}/send`,
-          { method: "POST" },
+          {
+            method: "POST",
+            headers: faToken
+              ? { Authorization: `Bearer ${faToken}` }
+              : undefined,
+          },
         );
 
         if (!res.ok) {
@@ -337,7 +351,11 @@ const App: React.FC = () => {
       const url = new URL(`${API_BASE}/api/fa/hostel-permissions`);
       if (faSection) url.searchParams.set("section", faSection);
 
-      const res = await fetch(url.toString());
+      const faToken = localStorage.getItem("fa_access_token") || "";
+
+      const res = await fetch(url.toString(), {
+        headers: faToken ? { Authorization: `Bearer ${faToken}` } : undefined,
+      });
       if (!res.ok) return;
       const data = await res.json();
       const items = (data?.hostel_permissions || []) as any[];
